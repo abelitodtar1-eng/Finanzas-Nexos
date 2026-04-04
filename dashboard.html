@@ -332,6 +332,41 @@
 
   select:focus, input[type=text]:focus { border-color: var(--accent3); }
 
+  .date-picker-wrap {
+    display: flex;
+    align-items: center;
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 10px;
+    padding: 6px 12px;
+    gap: 8px;
+    transition: border-color 0.2s;
+  }
+  .date-picker-wrap:focus-within { border-color: var(--accent); box-shadow: 0 0 0 2px rgba(0,229,160,0.15); }
+  .date-picker-icon { font-size: 1rem; }
+  .date-picker-wrap input[type=date] {
+    background: transparent;
+    border: none;
+    color: var(--text);
+    font-family: var(--font-display);
+    font-size: 13px;
+    outline: none;
+    cursor: pointer;
+    padding: 0;
+  }
+  .date-picker-wrap input[type=date]::-webkit-calendar-picker-indicator { filter: invert(0.7); cursor: pointer; }
+  .date-clear-btn {
+    background: none;
+    border: none;
+    color: var(--text-dim);
+    cursor: pointer;
+    font-size: 0.85rem;
+    padding: 0 2px;
+    transition: color 0.2s;
+    line-height: 1;
+  }
+  .date-clear-btn:hover { color: var(--red); }
+
   /* Tab pages */
   .tab-page { display: none; }
   .tab-page.active { display: block; }
@@ -557,9 +592,11 @@
 <!-- ============ TAB: DIARIO ============ -->
 <div class="tab-page" id="tab-diario">
   <div class="filter-row">
-    <select id="filterDia" onchange="renderDailyTable()">
-      <option value="">Todos los períodos</option>
-    </select>
+    <div class="date-picker-wrap">
+      <span class="date-picker-icon">📅</span>
+      <input type="date" id="filterDia" onchange="renderDailyTable()" placeholder="Seleccionar fecha" title="Filtrar por fecha" />
+      <button class="date-clear-btn" onclick="document.getElementById('filterDia').value=''; renderDailyTable();" title="Ver todos">✕</button>
+    </div>
   </div>
 
   <div class="card">
@@ -952,17 +989,16 @@ function renderResumenCharts() {
 // ============================================================
 
 function populateFilterDia() {
-  const sel = document.getElementById('filterDia');
-  DAILY.forEach(d => {
-    const opt = document.createElement('option');
-    opt.value = d.fecha;
-    opt.textContent = d.label;
-    sel.appendChild(opt);
-  });
+  // date input no necesita populate
 }
 
 function renderDailyTable() {
-  const filter = document.getElementById('filterDia').value;
+  const raw = document.getElementById('filterDia').value; // YYYY-MM-DD
+  let filter = '';
+  if (raw) {
+    const [y, m, d] = raw.split('-');
+    filter = `${parseInt(d)}-${parseInt(m)}-${y.slice(-2)}`; // D-M-YY
+  }
   const data = filter ? DAILY.filter(d=>d.fecha===filter) : DAILY;
   const tbody = document.getElementById('dailyTableBody');
 
