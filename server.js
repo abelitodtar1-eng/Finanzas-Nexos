@@ -259,6 +259,56 @@ app.get('/api/mes', async (req, res) => {
 });
 
 
+app.get('/api/chat/preflight', (_req, res) => {
+  res.set('Access-Control-Allow-Origin', '*');
+  res.set('Access-Control-Allow-Methods', 'POST, OPTIONS');
+  res.set('Access-Control-Allow-Headers', 'Content-Type');
+  res.sendStatus(204);
+});
+
+app.options('/api/chat', (_req, res) => {
+  res.set('Access-Control-Allow-Origin', '*');
+  res.set('Access-Control-Allow-Methods', 'POST, OPTIONS');
+  res.set('Access-Control-Allow-Headers', 'Content-Type');
+  res.sendStatus(204);
+});
+
+app.post('/api/chat', async (req, res) => {
+  res.set('Access-Control-Allow-Origin', '*');
+  try {
+    const { message, context } = req.body;
+    const apiKey = process.env.ANTHROPIC_API_KEY;
+    if (!apiKey) return res.status(500).json({ error: 'ANTHROPIC_API_KEY no configurada' });
+
+    const systemPrompt = `Eres el asistente financiero de Pedro, un negocio de sublimación y personalización en Cuba.
+Responde siempre en español, de forma concisa y útil. Usa CUP para montos en pesos cubanos.
+Contexto financiero actual del dashboard:
+${JSON.stringify(context || {})}`;
+
+    const response = await fetch('https://api.anthropic.com/v1/messages', {
+      method: 'POST',
+      headers: {
+        'x-api-key': apiKey,
+        'anthropic-version': '2023-06-01',
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify({
+        model: 'claude-haiku-4-5-20251001',
+        max_tokens: 1024,
+        system: systemPrompt,
+        messages: [{ role: 'user', content: message }],
+      }),
+    });
+
+    const data = await response.json();
+    if (data.error) return res.status(500).json({ error: data.error.message });
+    res.json({ response: data.content[0].text });
+  } catch (err) {
+    console.error('/api/chat error:', err.message);
+    res.status(500).json({ error: err.message });
+  }
+});
+
 app.listen(PORT, () => {
   console.log(`Dashboard corriendo en http://localhost:${PORT}`);
 });
