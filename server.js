@@ -7,7 +7,7 @@ const app = express();
 app.use(express.json());
 const PORT = process.env.PORT || 3000;
 const SHEET_ID = '1g8lR3i_ex5scINzYoUA_hHM2ImaQ4Tg642MOTVvJ77Y';
-const API_KEY  = process.env.GOOGLE_API_KEY || 'AIzaSyDZaXUrGborl5GrkqKk3P1Ssswcy_MeD3s';
+const API_KEY  = process.env.GOOGLE_API_KEY || 'AIzaSyC8DAvTXr4i2NLdNlM8jYdiB1mfrQFKQQ0';
 
 // ── Helpers ───────────────────────────────────────────────────────────────────
 
