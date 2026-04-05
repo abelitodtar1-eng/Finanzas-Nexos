@@ -209,26 +209,21 @@
     .pill-yellow { background: rgba(255,209,102,.15); color: var(--yellow); }
     .pill-red    { background: rgba(224,92,92,.15);   color: var(--red); }
 
-    /* ── Week nav ── */
-    .week-nav {
-      display: flex;
-      align-items: center;
-      gap: 10px;
-      margin-bottom: 18px;
-    }
-    .week-nav button {
+    /* ── Día pills ── */
+    .dia-pill {
+      padding: 5px 16px;
+      border-radius: 20px;
+      font-size: 0.8rem;
+      font-weight: 600;
       background: var(--card);
       border: 1px solid var(--border);
-      color: var(--text);
-      border-radius: 6px;
-      padding: 5px 14px;
-      cursor: pointer;
-      font-size: 0.82rem;
-      font-family: inherit;
-      transition: border-color .18s;
+      color: var(--muted);
     }
-    .week-nav button:hover { border-color: var(--accent); }
-    #week-label { font-size: 0.88rem; color: var(--muted); font-family: 'IBM Plex Mono', monospace; }
+    .dia-pill.hoy {
+      background: rgba(0,212,170,.12);
+      border-color: var(--accent);
+      color: var(--accent);
+    }
 
     /* ── Catálogo margin bar ── */
     .bar-mini { display: flex; align-items: center; gap: 7px; }
@@ -330,10 +325,13 @@
   <div class="view" id="view-semana">
     <div id="sem-loading" class="loading-wrap"><div class="spinner"></div> Cargando semana…</div>
     <div id="sem-content" style="display:none">
-      <div class="week-nav">
-        <button id="btn-prev-week">← Anterior</button>
-        <span id="week-label">—</span>
-        <button id="btn-next-week">Siguiente →</button>
+      <div style="display:flex;gap:8px;margin-bottom:18px;flex-wrap:wrap">
+        <span id="dia-lunes"   class="dia-pill">Lunes</span>
+        <span id="dia-martes"  class="dia-pill">Martes</span>
+        <span id="dia-miercoles" class="dia-pill">Miércoles</span>
+        <span id="dia-jueves"  class="dia-pill">Jueves</span>
+        <span id="dia-viernes" class="dia-pill">Viernes</span>
+        <span id="dia-sabado"  class="dia-pill">Sábado</span>
       </div>
 
       <div class="kpi-grid">
@@ -652,7 +650,12 @@ async function loadSemana() {
     const { semana, totales, semana_label } = dataSem;
     const { salarios } = await resCat.json();
 
-    document.getElementById('week-label').textContent = semana_label;
+    // Marcar día actual
+    const diasIds = ['dia-lunes','dia-martes','dia-miercoles','dia-jueves','dia-viernes','dia-sabado'];
+    const hoyIdx = new Date().getDay(); // 0=dom,1=lun...6=sab
+    const idxMap = {1:0,2:1,3:2,4:3,5:4,6:5};
+    diasIds.forEach(id => document.getElementById(id).classList.remove('hoy'));
+    if (idxMap[hoyIdx] !== undefined) document.getElementById(diasIds[idxMap[hoyIdx]]).classList.add('hoy');
     document.getElementById('kpi-sem-art').textContent  = totales.articulos;
     document.getElementById('kpi-sem-venta').textContent = fmt(totales.venta);
     document.getElementById('kpi-sem-gan').textContent   = fmt(totales.ganancia);
