@@ -259,6 +259,7 @@
 <div class="tabs">
   <button class="tab active" data-view="hoy">Hoy</button>
   <button class="tab" data-view="semana">Esta Semana</button>
+  <button class="tab" data-view="mes">Este Mes</button>
   <button class="tab" data-view="catalogo">Catálogo</button>
   <button class="tab" data-view="sheets">📊 Hoja</button>
 </div>
@@ -434,6 +435,66 @@
             </tr>
           </thead>
           <tbody id="tbody-catalogo"></tbody>
+        </table>
+      </div>
+    </div>
+  </div>
+
+  <!-- ════ MES ════ -->
+  <div class="view" id="view-mes">
+    <div id="mes-loading" class="loading-wrap"><div class="spinner"></div> Cargando mes…</div>
+    <div id="mes-content" style="display:none">
+      <div style="display:flex;align-items:center;gap:10px;margin-bottom:18px">
+        <button id="btn-prev-mes" style="background:var(--card);border:1px solid var(--border);color:var(--text);border-radius:6px;padding:5px 14px;cursor:pointer;font-family:inherit;font-size:0.82rem">← Anterior</button>
+        <span id="mes-label" style="color:var(--muted);font-family:'IBM Plex Mono',monospace;font-size:0.88rem">—</span>
+        <button id="btn-next-mes" style="background:var(--card);border:1px solid var(--border);color:var(--text);border-radius:6px;padding:5px 14px;cursor:pointer;font-family:inherit;font-size:0.82rem">Siguiente →</button>
+      </div>
+
+      <div class="kpi-grid">
+        <div class="kpi" style="--kpi-color:var(--accent)">
+          <div class="kpi-icon">🛒</div>
+          <div class="kpi-label">Artículos mes</div>
+          <div class="kpi-value" id="kpi-mes-art">—</div>
+        </div>
+        <div class="kpi" style="--kpi-color:var(--accent)">
+          <div class="kpi-icon">💵</div>
+          <div class="kpi-label">Venta mes</div>
+          <div class="kpi-value" id="kpi-mes-venta">—</div>
+          <div class="kpi-sub">CUP</div>
+        </div>
+        <div class="kpi" style="--kpi-color:var(--yellow)">
+          <div class="kpi-icon">✅</div>
+          <div class="kpi-label">Ganancia Neta</div>
+          <div class="kpi-value" id="kpi-mes-gan">—</div>
+          <div class="kpi-sub">CUP</div>
+        </div>
+        <div class="kpi" style="--kpi-color:var(--red)">
+          <div class="kpi-icon">📅</div>
+          <div class="kpi-label">Semanas</div>
+          <div class="kpi-value" id="kpi-mes-sem">—</div>
+        </div>
+      </div>
+
+      <div class="charts-grid">
+        <div class="chart-card" style="grid-column:span 2">
+          <h3>Ventas y ganancia por semana</h3>
+          <div class="chart-wrap" style="height:260px"><canvas id="chart-mes-semanas"></canvas></div>
+        </div>
+      </div>
+
+      <div class="table-card">
+        <div class="table-header"><h3>Detalle por semana</h3></div>
+        <table>
+          <thead>
+            <tr>
+              <th>Semana</th>
+              <th class="num">Artículos</th>
+              <th class="num">Venta</th>
+              <th class="num">Inversión</th>
+              <th class="num">Ganancia</th>
+            </tr>
+          </thead>
+          <tbody id="tbody-mes"></tbody>
         </table>
       </div>
     </div>
@@ -789,6 +850,87 @@ function renderTablaCatalogo() {
 }
 
 // ══════════════════════════════════════════════════════
+// VISTA: MES
+// ══════════════════════════════════════════════════════
+let chartMesSem = null, mesLoaded = false;
+let mesActual = null; // formato "M-YY"
+
+function mesOffset(base, offset) {
+  const [m, y] = base.split('-').map(Number);
+  let nm = m + offset, ny = y;
+  if (nm > 12) { nm -= 12; ny++; }
+  if (nm < 1)  { nm += 12; ny--; }
+  return `${nm}-${ny}`;
+}
+
+async function loadMes(mes) {
+  mesLoaded = false;
+  showLoading('mes', true);
+  try {
+    const param = mes ? `?mes=${mes}` : '';
+    const res  = await fetch(`${API}/api/mes${param}`);
+    const data = await res.json();
+    if (data.error) {
+      document.getElementById('mes-loading').innerHTML = `<span style="color:var(--muted)">Sin datos para este mes</span>`;
+      return;
+    }
+    const { semanas, totales, mes_label, mes: mesParam } = data;
+    mesActual = mesParam;
+
+    document.getElementById('mes-label').textContent        = mes_label;
+    document.getElementById('kpi-mes-art').textContent      = totales.articulos;
+    document.getElementById('kpi-mes-venta').textContent    = fmt(totales.venta);
+    document.getElementById('kpi-mes-gan').textContent      = fmt(totales.ganancia);
+    document.getElementById('kpi-mes-sem').textContent      = semanas.length;
+
+    const labels  = semanas.map(s => s.semana_label);
+    const ventas  = semanas.map(s => s.totales.venta);
+    const gans    = semanas.map(s => s.totales.ganancia);
+
+    if (chartMesSem) chartMesSem.destroy();
+    chartMesSem = new Chart(document.getElementById('chart-mes-semanas'), {
+      type: 'bar',
+      data: {
+        labels,
+        datasets: [
+          { label: 'Ventas (CUP)',   data: ventas, backgroundColor: 'rgba(0,212,170,.65)', borderRadius: 5 },
+          { label: 'Ganancia (CUP)', data: gans,   backgroundColor: 'rgba(0,212,170,.25)', borderRadius: 5 }
+        ]
+      },
+      options: {
+        responsive: true, maintainAspectRatio: false,
+        plugins: { legend: { labels: { color: '#8899aa', font: { size: 11 } } } },
+        scales: {
+          x: { ticks: { color: '#8899aa' }, grid: { color: 'rgba(255,255,255,.04)' } },
+          y: { ticks: { color: '#8899aa' }, grid: { color: 'rgba(255,255,255,.04)' } }
+        }
+      }
+    });
+
+    document.getElementById('tbody-mes').innerHTML = semanas.map(s => `
+      <tr>
+        <td class="name">${s.semana_label}</td>
+        <td class="num">${s.totales.articulos}</td>
+        <td class="num">${fmt(s.totales.venta)}</td>
+        <td class="num">${fmt(s.totales.inversion)}</td>
+        <td class="num" style="color:var(--green)">${fmt(s.totales.ganancia)}</td>
+      </tr>`).join('');
+
+    showLoading('mes', false);
+    mesLoaded = true;
+  } catch (e) {
+    document.getElementById('mes-loading').innerHTML = '<span style="color:var(--muted)">⚠️ Error al cargar mes</span>';
+  }
+}
+
+document.getElementById('btn-prev-mes').addEventListener('click', () => {
+  if (mesActual) loadMes(mesOffset(mesActual, -1));
+});
+document.getElementById('btn-next-mes').addEventListener('click', () => {
+  if (mesActual) loadMes(mesOffset(mesActual, 1));
+});
+
+// ══════════════════════════════════════════════════════
 // INIT
 // ══════════════════════════════════════════════════════
 loadHoy();
@@ -796,6 +938,7 @@ loadHoy();
 document.querySelectorAll('.tab').forEach(btn => {
   btn.addEventListener('click', () => {
     if (btn.dataset.view === 'semana')  loadSemana();
+    if (btn.dataset.view === 'mes' && !mesLoaded) loadMes();
     if (btn.dataset.view === 'catalogo') loadCatalogo();
   });
 });
