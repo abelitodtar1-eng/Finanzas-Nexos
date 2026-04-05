@@ -233,7 +233,7 @@
   <h1><span>Conta</span>Bot — Dashboard</h1>
   <div class="header-right">
     <span id="fecha-hoy"></span>
-    <span class="badge">DEMO</span>
+    <span class="badge" id="live-badge">LIVE</span>
   </div>
 </header>
 
@@ -364,7 +364,7 @@
       <div class="kpi" style="--kpi-color:#6c63ff">
         <div class="kpi-icon">📦</div>
         <div class="kpi-label">Productos</div>
-        <div class="kpi-value">36</div>
+        <div class="kpi-value" id="kpi-cat-count">—</div>
       </div>
       <div class="kpi" style="--kpi-color:#00d4aa">
         <div class="kpi-icon">💰</div>
@@ -417,94 +417,51 @@
 
 <script>
 // ═══════════════════════════════════════════════
-// DATOS
+// ESTADO GLOBAL
 // ═══════════════════════════════════════════════
-const PRODUCTOS = [
-  { nombre:"Pulóver Blanco Dri-Fit",            inversion_total:1061.75, precio_venta:2000, ganancia_neta:750.60 },
-  { nombre:"Pulóver Blanco Niño (1-10)",         inversion_total:881.50,  precio_venta:1800, ganancia_neta:734.80 },
-  { nombre:"Pulóver Blanco Poliespandex",        inversion_total:1496.50, precio_venta:2400, ganancia_neta:722.80 },
-  { nombre:"Pulóver Negro Poliespandex",         inversion_total:1310.50, precio_venta:2400, ganancia_neta:871.60 },
-  { nombre:"Pulóver Beige Poliespandex",         inversion_total:1059.00, precio_venta:2400, ganancia_neta:1072.80},
-  { nombre:"Pulóver Colores Vinil Sublimable",   inversion_total:1940.30, precio_venta:2700, ganancia_neta:607.76 },
-  { nombre:"Pulóver Colores Vinil Textil",       inversion_total:1363.25, precio_venta:2200, ganancia_neta:669.40 },
-  { nombre:"Jarra de Cristal 16oz",             inversion_total:1903.25, precio_venta:3000, ganancia_neta:877.40 },
-  { nombre:"Jarra 11oz",                        inversion_total:856.67,  precio_venta:1300, ganancia_neta:354.67 },
-  { nombre:"Jarra Mágica",                      inversion_total:634.17,  precio_venta:1300, ganancia_neta:532.67 },
-  { nombre:"Jarra Térmica",                     inversion_total:2659.17, precio_venta:3200, ganancia_neta:432.67 },
-  { nombre:"Losa 10x10 con soporte",            inversion_total:275.38,  precio_venta:1200, ganancia_neta:739.70 },
-  { nombre:"Losa 15x15 con soporte",            inversion_total:750.75,  precio_venta:1300, ganancia_neta:439.40 },
-  { nombre:"Losa 20x20 con soporte",            inversion_total:901.50,  precio_venta:1600, ganancia_neta:558.80 },
-  { nombre:"Gorra",                             inversion_total:1093.15, precio_venta:2000, ganancia_neta:725.48 },
-  { nombre:"Jaba de Tela",                      inversion_total:556.00,  precio_venta:1200, ganancia_neta:515.20 },
-  { nombre:"Bolso Grande",                      inversion_total:2157.50, precio_venta:3000, ganancia_neta:674.00 },
-  { nombre:"Llavero de Acrílico",               inversion_total:182.65,  precio_venta:400,  ganancia_neta:173.88 },
-  { nombre:"Mauspad",                           inversion_total:357.50,  precio_venta:1000, ganancia_neta:514.00 },
-  { nombre:"Botella de Aluminio",               inversion_total:1894.67, precio_venta:2500, ganancia_neta:484.27 },
-  { nombre:"Pomo de Aluminio",                  inversion_total:2160.75, precio_venta:2800, ganancia_neta:511.40 },
-  { nombre:"Pomo Deportivo 750ml",              inversion_total:2676.50, precio_venta:3500, ganancia_neta:658.80 },
-  { nombre:"Enguatada",                         inversion_total:1393.50, precio_venta:2200, ganancia_neta:645.20 },
-  { nombre:"Portacelular",                      inversion_total:603.75,  precio_venta:1200, ganancia_neta:477.00 },
-  { nombre:"Taza de Café",                      inversion_total:663.15,  precio_venta:1500, ganancia_neta:669.48 },
-  { nombre:"Delantal Vinil Sublimable",         inversion_total:1534.05, precio_venta:2200, ganancia_neta:532.76 },
-  { nombre:"Delantal Vinil Textil",             inversion_total:1028.50, precio_venta:2000, ganancia_neta:777.20 },
-  { nombre:"Monedero",                          inversion_total:415.00,  precio_venta:700,  ganancia_neta:228.00 },
-  { nombre:"Cojín",                             inversion_total:1356.00, precio_venta:2100, ganancia_neta:595.20 },
-  { nombre:"Pop Socket",                        inversion_total:563.15,  precio_venta:1000, ganancia_neta:349.48 },
-  { nombre:"Fotorroca",                         inversion_total:1702.50, precio_venta:2300, ganancia_neta:478.00 },
-  { nombre:"Imán",                              inversion_total:594.72,  precio_venta:1100, ganancia_neta:404.23 },
-  { nombre:"Propio Vinil Logo",                 inversion_total:210.94,  precio_venta:500,  ganancia_neta:231.25 },
-  { nombre:"Propio Vinil Sublimable A4",        inversion_total:371.88,  precio_venta:900,  ganancia_neta:422.50 },
-  { nombre:"Propio Vinil Textil",               inversion_total:967.55,  precio_venta:1500, ganancia_neta:425.96 },
-  { nombre:"Propio Sublimación",                inversion_total:109.00,  precio_venta:400,  ganancia_neta:232.80 },
-];
-
-// ── Datos demo para "Hoy" ──
-const VENTAS_HOY = [
-  { producto:"Pulóver Beige Poliespandex",  cant:3, metodo:"Transferencia" },
-  { producto:"Jarra de Cristal 16oz",       cant:2, metodo:"Físico" },
-  { producto:"Gorra",                       cant:4, metodo:"Transferencia" },
-  { producto:"Taza de Café",               cant:5, metodo:"Físico" },
-  { producto:"Losa 10x10 con soporte",     cant:2, metodo:"No Pago" },
-  { producto:"Llavero de Acrílico",        cant:8, metodo:"Físico" },
-];
-
-// ── Datos demo para la semana ──
+let CATALOGO = [];
+let VENTAS_HOY = [];
+let SEMANA_DATA = null;
 const DIAS = ["Lunes","Martes","Miércoles","Jueves","Viernes","Sábado"];
-const VENTAS_SEMANA = [
-  // [lunes, martes, miercoles, jueves, viernes, sabado]
-  { producto:"Pulóver Beige Poliespandex",  ventas:[2,1,0,3,2,1] },
-  { producto:"Jarra de Cristal 16oz",       ventas:[1,2,1,0,2,3] },
-  { producto:"Gorra",                       ventas:[3,2,4,2,3,4] },
-  { producto:"Taza de Café",               ventas:[4,3,5,4,5,5] },
-  { producto:"Losa 10x10 con soporte",     ventas:[1,2,1,2,2,2] },
-  { producto:"Llavero de Acrílico",        ventas:[5,4,8,6,7,8] },
-  { producto:"Mauspad",                     ventas:[1,0,2,1,1,2] },
-  { producto:"Pop Socket",                  ventas:[2,3,2,1,3,2] },
-  { producto:"Pulóver Negro Poliespandex",  ventas:[1,1,2,1,2,1] },
-  { producto:"Jaba de Tela",               ventas:[0,1,1,2,1,1] },
-];
 
-// ═══════════════════════════════════════════════
-// HELPERS
-// ═══════════════════════════════════════════════
 const fmt = n => Math.round(n).toLocaleString('es-CU');
-const fmtDec = n => n.toLocaleString('es-CU', {minimumFractionDigits:2, maximumFractionDigits:2});
 
-function getProducto(nombre) {
-  return PRODUCTOS.find(p => p.nombre === nombre) || null;
+// ═══════════════════════════════════════════════
+// API HELPERS
+// ═══════════════════════════════════════════════
+async function loadCatalogo() {
+  const res = await fetch('/api/catalogo');
+  const data = await res.json();
+  CATALOGO = data.productos.filter(p => p.precio_venta > 0);
 }
 
-function calcVentasHoy() {
-  return VENTAS_HOY.map(v => {
-    const p = getProducto(v.producto);
-    return {
-      ...v,
-      precio: p ? p.precio_venta : 0,
-      inversion: p ? p.inversion_total * v.cant : 0,
-      total: p ? p.precio_venta * v.cant : 0,
-      ganancia: p ? p.ganancia_neta * v.cant : 0,
-    };
-  });
+async function loadHoy() {
+  const res = await fetch('/api/hoy');
+  const data = await res.json();
+  VENTAS_HOY = data.ventas.filter(v => v.cantidad > 0);
+}
+
+async function loadSemana() {
+  const res = await fetch('/api/semana');
+  const data = await res.json();
+  SEMANA_DATA = data;
+}
+
+async function initData() {
+  try {
+    await loadCatalogo();
+    await loadHoy();
+    await loadSemana();
+    renderHoy();
+    renderSemana();
+    renderCatalogo();
+  } catch (e) {
+    console.error('Error cargando datos:', e);
+  }
+}
+
+function getProductoPorNombre(nombre) {
+  return CATALOGO.find(p => p.nombre === nombre) || null;
 }
 
 // ═══════════════════════════════════════════════
@@ -530,11 +487,11 @@ document.getElementById('fecha-hoy').textContent =
 // VISTA: HOY
 // ═══════════════════════════════════════════════
 function renderHoy() {
-  const ventas = calcVentasHoy();
-  const totalArt = ventas.reduce((s, v) => s + v.cant, 0);
-  const totalVenta = ventas.reduce((s, v) => s + v.total, 0);
-  const totalInv = ventas.reduce((s, v) => s + v.inversion, 0);
-  const totalGan = ventas.reduce((s, v) => s + v.ganancia, 0);
+  const ventas = VENTAS_HOY;
+  const totalArt = ventas.reduce((s, v) => s + v.cantidad, 0);
+  const totalVenta = ventas.reduce((s, v) => s + v.total_venta, 0);
+  const totalInv = ventas.reduce((s, v) => s + v.total_inversion, 0);
+  const totalGan = ventas.reduce((s, v) => s + v.total_ganancia, 0);
 
   document.getElementById('kpi-articulos').textContent = totalArt;
   document.getElementById('kpi-venta').textContent = fmt(totalVenta);
@@ -545,29 +502,31 @@ function renderHoy() {
   const tbody = document.getElementById('tbody-hoy');
   tbody.innerHTML = ventas.map(v => `
     <tr>
-      <td>${v.producto}</td>
-      <td class="num">${v.cant}</td>
-      <td class="num">${fmt(v.precio)}</td>
-      <td class="num">${fmt(v.total)}</td>
-      <td class="num" style="color:var(--accent2)">${fmt(v.ganancia)}</td>
-      <td><span class="pill ${v.metodo==='No Pago'?'pill-red':v.metodo==='Físico'?'pill-yellow':'pill-green'}">${v.metodo}</span></td>
+      <td>${v.nombre}</td>
+      <td class="num">${v.cantidad}</td>
+      <td class="num">${fmt(v.precio_venta)}</td>
+      <td class="num">${fmt(v.total_venta)}</td>
+      <td class="num" style="color:var(--accent2)">${fmt(v.total_ganancia)}</td>
+      <td><span class="pill pill-green">API</span></td>
     </tr>
   `).join('');
 
   // Gráfica barras
-  const labels = ventas.map(v => v.producto.length > 18 ? v.producto.slice(0,18)+'…' : v.producto);
+  const labels = ventas.map(v => v.nombre.length > 18 ? v.nombre.slice(0,18)+'…' : v.nombre);
+  const existingChart1 = Chart.getChart('chart-hoy-productos');
+  if (existingChart1) existingChart1.destroy();
   new Chart(document.getElementById('chart-hoy-productos'), {
     type: 'bar',
     data: {
       labels,
       datasets: [{
         label: 'Total vendido (CUP)',
-        data: ventas.map(v => v.total),
+        data: ventas.map(v => v.total_venta),
         backgroundColor: 'rgba(108,99,255,.7)',
         borderRadius: 6,
       },{
         label: 'Ganancia neta (CUP)',
-        data: ventas.map(v => v.ganancia),
+        data: ventas.map(v => v.total_ganancia),
         backgroundColor: 'rgba(0,212,170,.7)',
         borderRadius: 6,
       }]
@@ -582,6 +541,8 @@ function renderHoy() {
   });
 
   // Donut
+  const existingChart2 = Chart.getChart('chart-hoy-donut');
+  if (existingChart2) existingChart2.destroy();
   new Chart(document.getElementById('chart-hoy-donut'), {
     type: 'doughnut',
     data: {
@@ -605,49 +566,31 @@ function renderHoy() {
 // ═══════════════════════════════════════════════
 // VISTA: SEMANA
 // ═══════════════════════════════════════════════
-let chartSemDias = null, chartTopProd = null, chartGanDia = null;
-
-function ventasPorDia() {
-  // suma ventas (CUP) por día
-  return DIAS.map((_, di) =>
-    VENTAS_SEMANA.reduce((s, vs) => {
-      const p = getProducto(vs.producto);
-      return s + (p ? p.precio_venta * vs.ventas[di] : 0);
-    }, 0)
-  );
-}
-
-function gananciaPorDia() {
-  return DIAS.map((_, di) =>
-    VENTAS_SEMANA.reduce((s, vs) => {
-      const p = getProducto(vs.producto);
-      return s + (p ? p.ganancia_neta * vs.ventas[di] : 0);
-    }, 0)
-  );
-}
-
-function topProductos() {
-  return VENTAS_SEMANA.map(vs => ({
-    nombre: vs.producto,
-    total: vs.ventas.reduce((a, b) => a + b, 0),
-    ganancia: vs.ventas.reduce((a, b) => a + b, 0) * (getProducto(vs.producto)?.ganancia_neta || 0),
-  })).sort((a, b) => b.total - a.total).slice(0, 10);
-}
-
 function renderSemana() {
-  document.getElementById('week-label').textContent = '25 Mar – 31 Mar 2026 (DEMO)';
+  if (!SEMANA_DATA) return;
 
-  const vd = ventasPorDia();
-  const gd = gananciaPorDia();
-  const top = topProductos();
+  const { semana, totales } = SEMANA_DATA;
+  document.getElementById('week-label').textContent = `${SEMANA_DATA.semana_label} (Desde API)`;
 
-  const totalVenta = vd.reduce((a, b) => a + b, 0);
-  const totalGan = gd.reduce((a, b) => a + b, 0);
-  const totalArt = VENTAS_SEMANA.reduce((s, vs) => s + vs.ventas.reduce((a,b)=>a+b,0), 0);
+  document.getElementById('kpi-sem-art').textContent = totales.articulos;
+  document.getElementById('kpi-sem-venta').textContent = fmt(totales.venta);
+  document.getElementById('kpi-sem-gan').textContent = fmt(totales.ganancia);
 
-  document.getElementById('kpi-sem-art').textContent = totalArt;
-  document.getElementById('kpi-sem-venta').textContent = fmt(totalVenta);
-  document.getElementById('kpi-sem-gan').textContent = fmt(totalGan);
+  const vd = semana.map(d => d.totales.venta);
+  const gd = semana.map(d => d.totales.ganancia);
+  const gdAcum = gd.reduce((arr, v) => { arr.push((arr.at(-1)||0)+v); return arr; }, []);
+
+  // Productos más vendidos en la semana
+  const prodTotales = {};
+  for (const dia of semana) {
+    for (const v of dia.ventas) {
+      prodTotales[v.nombre] = (prodTotales[v.nombre] || 0) + v.cantidad;
+    }
+  }
+  const top = Object.entries(prodTotales)
+    .map(([nombre, total]) => ({ nombre, total }))
+    .sort((a, b) => b.total - a.total)
+    .slice(0, 10);
 
   const cfg = (canvas, config) => {
     const existing = Chart.getChart(canvas);
@@ -655,7 +598,7 @@ function renderSemana() {
     return new Chart(canvas, config);
   };
 
-  // Barras apiladas por día
+  // Barras por día
   cfg(document.getElementById('chart-semana-dias'), {
     type: 'bar',
     data: {
@@ -705,15 +648,14 @@ function renderSemana() {
     }
   });
 
-  // Ganancia acumulada (línea)
-  const acum = gd.reduce((arr, v) => { arr.push((arr.at(-1)||0)+v); return arr; }, []);
+  // Ganancia acumulada
   cfg(document.getElementById('chart-ganancia-dia'), {
     type: 'line',
     data: {
       labels: DIAS,
       datasets: [{
         label: 'Ganancia acumulada',
-        data: acum,
+        data: gdAcum,
         borderColor: 'rgba(108,99,255,1)',
         backgroundColor: 'rgba(108,99,255,.15)',
         fill: true,
@@ -737,27 +679,34 @@ function renderSemana() {
 // VISTA: CATÁLOGO
 // ═══════════════════════════════════════════════
 let sortCol = 'ganancia_neta', sortDir = -1;
-let catalogoFiltrado = [...PRODUCTOS];
+let catalogoFiltrado = [];
 
 function margenPct(p) {
-  return ((p.ganancia_neta / p.precio_venta) * 100);
+  return p.precio_venta > 0 ? ((p.ganancia_neta / p.precio_venta) * 100) : 0;
 }
 
 function renderCatalogo() {
-  const maxGan = Math.max(...PRODUCTOS.map(p => p.ganancia_neta));
-  const minGan = Math.min(...PRODUCTOS.map(p => p.ganancia_neta));
-  const promedioMargen = PRODUCTOS.reduce((s,p) => s + margenPct(p), 0) / PRODUCTOS.length;
-  const prodMax = PRODUCTOS.find(p => p.ganancia_neta === maxGan);
-  const prodMin = PRODUCTOS.find(p => p.ganancia_neta === minGan);
+  if (!CATALOGO.length) return;
+  catalogoFiltrado = [...CATALOGO];
+
+  document.getElementById('kpi-cat-count').textContent = CATALOGO.length;
+
+  const maxGan = Math.max(...CATALOGO.map(p => p.ganancia_neta));
+  const minGan = Math.min(...CATALOGO.map(p => p.ganancia_neta));
+  const promedioMargen = CATALOGO.reduce((s,p) => s + margenPct(p), 0) / CATALOGO.length;
+  const prodMax = CATALOGO.find(p => p.ganancia_neta === maxGan);
+  const prodMin = CATALOGO.find(p => p.ganancia_neta === minGan);
 
   document.getElementById('kpi-cat-max').textContent = fmt(maxGan);
-  document.getElementById('kpi-cat-max-prod').textContent = prodMax.nombre;
+  document.getElementById('kpi-cat-max-prod').textContent = prodMax?.nombre || '';
   document.getElementById('kpi-cat-min').textContent = fmt(minGan);
-  document.getElementById('kpi-cat-min-prod').textContent = prodMin.nombre;
+  document.getElementById('kpi-cat-min-prod').textContent = prodMin?.nombre || '';
   document.getElementById('kpi-cat-margen').textContent = promedioMargen.toFixed(1) + '%';
 
   // Gráfica horizontal
-  const sorted = [...PRODUCTOS].sort((a,b) => a.ganancia_neta - b.ganancia_neta);
+  const sorted = [...CATALOGO].sort((a,b) => a.ganancia_neta - b.ganancia_neta);
+  const existingChart = Chart.getChart('chart-catalogo-bar');
+  if (existingChart) existingChart.destroy();
   new Chart(document.getElementById('chart-catalogo-bar'), {
     type: 'bar',
     indexAxis: 'y',
@@ -802,13 +751,13 @@ function renderCatalogo() {
   // Búsqueda
   document.getElementById('search-catalogo').addEventListener('input', e => {
     const q = e.target.value.toLowerCase();
-    catalogoFiltrado = PRODUCTOS.filter(p => p.nombre.toLowerCase().includes(q));
+    catalogoFiltrado = CATALOGO.filter(p => p.nombre.toLowerCase().includes(q));
     renderTablaCatalogo();
   });
 }
 
 function renderTablaCatalogo() {
-  const maxGan = Math.max(...PRODUCTOS.map(p => p.ganancia_neta));
+  const maxGan = Math.max(...CATALOGO.map(p => p.ganancia_neta));
   const sorted = [...catalogoFiltrado].sort((a, b) => {
     const va = a[sortCol] ?? (sortCol==='nombre'?'':0);
     const vb = b[sortCol] ?? (sortCol==='nombre'?'':0);
@@ -818,7 +767,7 @@ function renderTablaCatalogo() {
   document.getElementById('tbody-catalogo').innerHTML = sorted.map(p => {
     const m = margenPct(p);
     const pill = m >= 50 ? 'pill-green' : m >= 35 ? 'pill-yellow' : 'pill-red';
-    const barW = (p.ganancia_neta / maxGan * 100).toFixed(1);
+    const barW = maxGan > 0 ? (p.ganancia_neta / maxGan * 100).toFixed(1) : 0;
     return `
       <tr>
         <td>${p.nombre}</td>
@@ -840,9 +789,13 @@ function renderTablaCatalogo() {
 // ═══════════════════════════════════════════════
 // INIT
 // ═══════════════════════════════════════════════
-renderHoy();
-renderSemana();
-renderCatalogo();
+// Fecha real
+const fechaActual = new Date();
+document.getElementById('fecha-hoy').textContent =
+  fechaActual.toLocaleDateString('es-CU', {weekday:'long', day:'numeric', month:'long', year:'numeric'});
+
+// Cargar datos desde APIs y renderizar
+initData();
 </script>
 </body>
 </html>
