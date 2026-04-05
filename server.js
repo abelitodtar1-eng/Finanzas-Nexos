@@ -1,13 +1,12 @@
 const express = require('express');
 const path = require('path');
-const { google } = require('googleapis');
+const https = require('https');
 const catalog = require('./variables_n8n.json');
 
 const app = express();
 app.use(express.json());
 const PORT = process.env.PORT || 3000;
-const SHEET_ID = '1CuQN2We_U1517s4mUHYGqE2T89_W8XFql7gVYNWRkN0';
-const API_KEY  = process.env.GOOGLE_API_KEY || 'AIzaSyAvvW0_pgJLePNMfTD73Mfey-FVhQ76IB4';
+const SHEET_ID = '1g8lR3i_ex5scINzYoUA_hHM2ImaQ4Tg642MOTVvJ77Y';
 
 // ── Helpers ───────────────────────────────────────────────────────────────────
 
@@ -28,14 +27,36 @@ function colToIndex(col) {
   return result - 1;
 }
 
-async function getSheetRows(name) {
-  const sheets = google.sheets({ version: 'v4' });
-  const res = await sheets.spreadsheets.values.get({
-    spreadsheetId: SHEET_ID,
-    range: `'${name}'!A1:BC13`,
-    key: API_KEY,
+function fetchURL(url) {
+  return new Promise((resolve, reject) => {
+    https.get(url, res => {
+      let data = '';
+      res.on('data', chunk => data += chunk);
+      res.on('end', () => resolve(data));
+    }).on('error', reject);
   });
-  return res.data.values || [];
+}
+
+function parseCSV(csv) {
+  return csv.trim().split('\n').map(row => {
+    const result = [];
+    let field = '', inQ = false;
+    for (let i = 0; i < row.length; i++) {
+      const c = row[i];
+      if (c === '"') { inQ = !inQ; continue; }
+      if (c === ',' && !inQ) { result.push(field); field = ''; continue; }
+      field += c;
+    }
+    result.push(field);
+    return result;
+  });
+}
+
+async function getSheetRows(name) {
+  const url = `https://docs.google.com/spreadsheets/d/${SHEET_ID}/gviz/tq?tqx=out:csv&sheet=${encodeURIComponent(name)}&range=A1:BC13`;
+  const csv = await fetchURL(url);
+  if (!csv || csv.includes('errorMessage')) throw new Error(`Hoja no encontrada: ${name}`);
+  return parseCSV(csv);
 }
 
 // rows[dayIdx + 1] → row for that weekday (0=Lunes…5=Sábado)
