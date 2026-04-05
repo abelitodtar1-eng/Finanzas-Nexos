@@ -490,6 +490,17 @@ async function loadHoy() {
   try {
     const res  = await fetch(`${API}/api/hoy`);
     const data = await res.json();
+    if (data.error) {
+      // Hoja del día no existe → mostrar ceros en lugar de error
+      showLoading('hoy', false);
+      document.getElementById('kpi-articulos').textContent = '0';
+      document.getElementById('kpi-venta').textContent     = '0';
+      document.getElementById('kpi-inversion').textContent = '0';
+      document.getElementById('kpi-ganancia').textContent  = '0';
+      document.getElementById('tbody-hoy').innerHTML =
+        `<tr><td colspan="5" style="text-align:center;color:var(--muted);padding:28px">Sin ventas registradas hoy</td></tr>`;
+      return;
+    }
     const { ventas, totales } = data;
 
     document.getElementById('kpi-articulos').textContent = totales.articulos;
@@ -567,7 +578,13 @@ async function loadSemana() {
       fetch(`${API}/api/semana`),
       fetch(`${API}/api/catalogo`)
     ]);
-    const { semana, totales, semana_label } = await resSem.json();
+    const dataSem = await resSem.json();
+    if (dataSem.error) {
+      document.getElementById('sem-loading').innerHTML =
+        '<span style="color:var(--muted)">Sin datos para esta semana</span>';
+      return;
+    }
+    const { semana, totales, semana_label } = dataSem;
     const { salarios } = await resCat.json();
 
     document.getElementById('week-label').textContent = semana_label;
