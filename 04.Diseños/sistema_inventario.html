@@ -1,0 +1,1195 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Control de Inventario · Sistema</title>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+<script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.min.js"></script>
+<style>
+:root{
+  --bg:#f8f9fb;--s1:#ffffff;--s2:#f1f3f7;--s3:#e8eaf0;
+  --border:#e2e5ed;--border2:#c8ccd8;
+  --text:#1a1d2e;--dim:#6b7280;--hint:#9ca3af;
+  --green:#16a34a;--green-bg:#f0fdf4;--green-border:#bbf7d0;
+  --red:#dc2626;--red-bg:#fef2f2;--red-border:#fecaca;
+  --amber:#d97706;--amber-bg:#fffbeb;--amber-border:#fde68a;
+  --blue:#2563eb;--blue-bg:#eff6ff;--blue-border:#bfdbfe;
+  --purple:#7c3aed;--purple-bg:#f5f3ff;
+  --font:'Inter',system-ui,sans-serif;
+  --mono:'JetBrains Mono',monospace;
+  --r:8px;--r2:12px;--r3:16px;
+}
+*{box-sizing:border-box;margin:0;padding:0}
+html,body{height:100%;overflow:hidden}
+body{font-family:var(--font);background:var(--bg);color:var(--text);display:flex;flex-direction:column}
+
+/* TOP BAR */
+.topbar{display:flex;align-items:center;justify-content:space-between;padding:0 20px;height:54px;background:var(--s1);border-bottom:1px solid var(--border);flex-shrink:0;box-shadow:0 1px 3px rgba(0,0,0,.06)}
+.logo{display:flex;align-items:center;gap:10px}
+.logo-icon{width:32px;height:32px;background:var(--blue);border-radius:8px;display:flex;align-items:center;justify-content:center;color:#fff;font-size:16px}
+.logo-text{font-size:15px;font-weight:700;letter-spacing:-.02em}
+.logo-sub{font-size:11px;color:var(--dim);font-weight:400}
+.topbar-alerts{display:flex;align-items:center;gap:8px}
+.alert-chip{display:flex;align-items:center;gap:5px;padding:4px 10px;border-radius:20px;font-size:11px;font-weight:600;cursor:pointer}
+.chip-red{background:var(--red-bg);color:var(--red);border:1px solid var(--red-border)}
+.chip-amber{background:var(--amber-bg);color:var(--amber);border:1px solid var(--amber-border)}
+
+/* LAYOUT */
+.layout{display:flex;flex:1;overflow:hidden}
+
+/* SIDEBAR */
+.sidenav{width:210px;flex-shrink:0;background:var(--s1);border-right:1px solid var(--border);padding:14px 10px;display:flex;flex-direction:column;gap:2px;overflow-y:auto}
+.nav-section{font-size:10px;font-weight:600;color:var(--hint);text-transform:uppercase;letter-spacing:.08em;padding:10px 10px 4px;margin-top:4px}
+.nav-btn{display:flex;align-items:center;gap:9px;padding:8px 10px;border-radius:var(--r);border:none;background:transparent;color:var(--dim);font-family:var(--font);font-size:13px;font-weight:500;cursor:pointer;width:100%;text-align:left;transition:all .15s}
+.nav-btn:hover{background:var(--s2);color:var(--text)}
+.nav-btn.active{background:var(--blue-bg);color:var(--blue);font-weight:600}
+.nav-icon{font-size:15px;width:20px;text-align:center;flex-shrink:0}
+.nav-badge{margin-left:auto;background:var(--red);color:#fff;font-size:10px;font-weight:700;padding:1px 6px;border-radius:10px}
+
+/* MAIN */
+.main{flex:1;overflow-y:auto;padding:20px;display:flex;flex-direction:column;gap:16px}
+.page{display:none;flex-direction:column;gap:16px}
+.page.active{display:flex}
+.page-title{font-size:20px;font-weight:700;letter-spacing:-.02em;margin-bottom:2px}
+.page-sub{font-size:13px;color:var(--dim)}
+
+/* KPI GRID */
+.kpi-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:12px}
+.kpi{background:var(--s1);border:1px solid var(--border);border-radius:var(--r2);padding:16px;transition:box-shadow .2s}
+.kpi:hover{box-shadow:0 2px 8px rgba(0,0,0,.08)}
+.kpi-top{display:flex;align-items:center;justify-content:space-between;margin-bottom:10px}
+.kpi-label{font-size:12px;color:var(--dim);font-weight:500}
+.kpi-icon{width:32px;height:32px;border-radius:8px;display:flex;align-items:center;justify-content:center;font-size:16px}
+.kpi-value{font-size:26px;font-weight:700;letter-spacing:-.03em;line-height:1}
+.kpi-sub{font-size:11px;color:var(--hint);margin-top:4px}
+
+/* CARDS */
+.card{background:var(--s1);border:1px solid var(--border);border-radius:var(--r2);padding:18px}
+.card-header{display:flex;align-items:center;justify-content:space-between;margin-bottom:14px}
+.card-title{font-size:13px;font-weight:600;color:var(--text)}
+.card-sub{font-size:11px;color:var(--dim);margin-top:2px}
+.g2{display:grid;grid-template-columns:1fr 1fr;gap:14px}
+.g3{display:grid;grid-template-columns:1fr 1fr 1fr;gap:14px}
+.chart-wrap{position:relative}
+
+/* TABLES */
+.tscroll{overflow-x:auto;border-radius:var(--r);border:1px solid var(--border)}
+table{width:100%;border-collapse:collapse;font-size:13px}
+thead{background:var(--s2)}
+th{font-size:10px;text-transform:uppercase;letter-spacing:.06em;color:var(--dim);text-align:left;padding:9px 12px;border-bottom:1px solid var(--border);font-weight:600;white-space:nowrap}
+td{padding:10px 12px;border-bottom:1px solid var(--border);color:var(--text);vertical-align:middle}
+tr:last-child td{border-bottom:none}
+tr:hover td{background:var(--s2)}
+.num{font-family:var(--mono);font-size:12px;text-align:right}
+
+/* STATUS BADGES */
+.badge{display:inline-flex;align-items:center;gap:4px;padding:3px 8px;border-radius:20px;font-size:11px;font-weight:600;white-space:nowrap}
+.badge-ok{background:var(--green-bg);color:var(--green);border:1px solid var(--green-border)}
+.badge-warn{background:var(--amber-bg);color:var(--amber);border:1px solid var(--amber-border)}
+.badge-danger{background:var(--red-bg);color:var(--red);border:1px solid var(--red-border)}
+.badge-info{background:var(--blue-bg);color:var(--blue);border:1px solid var(--blue-border)}
+.badge-neutral{background:var(--s2);color:var(--dim);border:1px solid var(--border)}
+
+/* PROGRESS */
+.prog-wrap{height:6px;background:var(--s3);border-radius:3px;overflow:hidden;min-width:80px}
+.prog-fill{height:100%;border-radius:3px;transition:width .4s}
+
+/* FORMS */
+.form-grid{display:grid;grid-template-columns:1fr 1fr;gap:12px}
+.form-group{display:flex;flex-direction:column;gap:5px}
+.form-group.full{grid-column:1/-1}
+label{font-size:12px;font-weight:600;color:var(--dim)}
+input,select,textarea{padding:9px 12px;border:1px solid var(--border);border-radius:var(--r);font-size:13px;font-family:var(--font);background:var(--s1);color:var(--text);outline:none;transition:border-color .15s;width:100%}
+input:focus,select:focus,textarea:focus{border-color:var(--blue);box-shadow:0 0 0 3px rgba(37,99,235,.1)}
+textarea{resize:vertical;min-height:70px}
+
+/* BUTTONS */
+.btn{padding:9px 18px;border-radius:var(--r);border:none;font-size:13px;font-weight:600;font-family:var(--font);cursor:pointer;transition:all .15s;display:inline-flex;align-items:center;gap:6px}
+.btn-primary{background:var(--blue);color:#fff}
+.btn-primary:hover{background:#1d4ed8}
+.btn-success{background:var(--green);color:#fff}
+.btn-success:hover{background:#15803d}
+.btn-danger{background:var(--red);color:#fff}
+.btn-danger:hover{background:#b91c1c}
+.btn-ghost{background:transparent;color:var(--dim);border:1px solid var(--border)}
+.btn-ghost:hover{background:var(--s2);color:var(--text)}
+.btn-sm{padding:6px 12px;font-size:12px}
+.btn-group{display:flex;gap:8px;flex-wrap:wrap}
+
+/* TYPE TABS */
+.type-tabs{display:flex;gap:0;border:1px solid var(--border);border-radius:var(--r);overflow:hidden;width:fit-content}
+.type-tab{padding:7px 20px;font-size:13px;font-weight:600;font-family:var(--font);background:var(--s1);color:var(--dim);border:none;cursor:pointer;transition:all .15s}
+.type-tab.in.active{background:var(--green-bg);color:var(--green)}
+.type-tab.out.active{background:var(--red-bg);color:var(--red)}
+.type-tab:hover:not(.active){background:var(--s2)}
+
+/* ALERTS PANEL */
+.alert-item{display:flex;align-items:center;gap:12px;padding:10px 12px;border-radius:var(--r);margin-bottom:6px;border:1px solid}
+.alert-item.danger{background:var(--red-bg);border-color:var(--red-border)}
+.alert-item.warning{background:var(--amber-bg);border-color:var(--amber-border)}
+.alert-icon{font-size:18px;flex-shrink:0}
+.alert-body{flex:1}
+.alert-name{font-size:13px;font-weight:600}
+.alert-detail{font-size:11px;color:var(--dim);margin-top:1px}
+.alert-action{font-size:11px;font-weight:600;padding:4px 10px;border-radius:20px;border:none;cursor:pointer;font-family:var(--font)}
+.alert-action.danger{background:var(--red);color:#fff}
+.alert-action.warning{background:var(--amber);color:#fff}
+
+/* CHATBOT */
+.chat-wrap{display:flex;flex-direction:column;height:100%;min-height:500px}
+.chat-head{display:flex;align-items:center;gap:12px;padding-bottom:14px;border-bottom:1px solid var(--border);margin-bottom:14px}
+.ai-av{width:40px;height:40px;border-radius:50%;background:linear-gradient(135deg,var(--blue),var(--purple));display:flex;align-items:center;justify-content:center;color:#fff;font-size:18px;flex-shrink:0}
+.chat-msgs{flex:1;overflow-y:auto;display:flex;flex-direction:column;gap:12px;padding:4px 0 10px;scrollbar-width:thin}
+.msg{display:flex;gap:9px;align-items:flex-start}
+.msg.user{flex-direction:row-reverse}
+.m-av{width:28px;height:28px;border-radius:50%;flex-shrink:0;display:flex;align-items:center;justify-content:center;font-size:11px;font-weight:700}
+.msg.ai .m-av{background:var(--blue-bg);color:var(--blue);border:1px solid var(--blue-border)}
+.msg.user .m-av{background:var(--s3);color:var(--dim)}
+.bubble{padding:10px 13px;border-radius:10px;font-size:13px;line-height:1.6;max-width:80%}
+.msg.ai .bubble{background:var(--s2);border:1px solid var(--border)}
+.msg.user .bubble{background:var(--blue);color:#fff}
+.bubble strong{color:var(--blue)}
+.msg.user .bubble strong{color:#bfdbfe}
+.bubble code{font-family:var(--mono);font-size:11px;background:var(--s3);padding:1px 5px;border-radius:4px;color:var(--amber)}
+.typing-dots{display:flex;gap:4px;padding:4px 2px}
+.typing-dots span{width:7px;height:7px;border-radius:50%;background:var(--dim);animation:td .8s infinite}
+.typing-dots span:nth-child(2){animation-delay:.15s}
+.typing-dots span:nth-child(3){animation-delay:.3s}
+@keyframes td{0%,60%,100%{transform:translateY(0);opacity:.5}30%{transform:translateY(-5px);opacity:1}}
+.chat-in-row{display:flex;gap:8px;margin-top:12px;padding-top:12px;border-top:1px solid var(--border)}
+.chat-in{flex:1;padding:9px 13px;border:1px solid var(--border);border-radius:var(--r);font-size:13px;font-family:var(--font);resize:none;height:40px;outline:none;transition:border-color .15s}
+.chat-in:focus{border-color:var(--blue)}
+.send-btn{padding:9px 16px;background:var(--blue);color:#fff;border:none;border-radius:var(--r);font-size:13px;font-weight:600;cursor:pointer;font-family:var(--font)}
+.send-btn:disabled{opacity:.4}
+.sugs{display:flex;gap:6px;flex-wrap:wrap;margin-bottom:10px}
+.sug{padding:5px 10px;border-radius:20px;border:1px solid var(--blue-border);background:var(--blue-bg);color:var(--blue);font-size:11px;font-family:var(--font);cursor:pointer;font-weight:500;transition:all .15s}
+.sug:hover{background:var(--blue);color:#fff}
+
+/* API MODAL */
+.modal-ov{position:fixed;inset:0;background:rgba(0,0,0,.5);display:flex;align-items:center;justify-content:center;z-index:1000;backdrop-filter:blur(4px)}
+.modal{background:var(--s1);border:1px solid var(--border);border-radius:var(--r3);padding:28px;width:420px;max-width:90vw;box-shadow:0 20px 60px rgba(0,0,0,.15)}
+.modal h2{font-size:18px;font-weight:700;margin-bottom:6px}
+.modal p{font-size:13px;color:var(--dim);margin-bottom:18px;line-height:1.6}
+.modal-note{font-size:11px;color:var(--hint);text-align:center;margin-top:10px}
+.modal-skip{font-size:12px;color:var(--blue);cursor:pointer;text-align:center;margin-top:8px;text-decoration:underline}
+
+/* CATEGORY CHIPS */
+.cat-chips{display:flex;gap:6px;flex-wrap:wrap;margin-bottom:14px}
+.cat-chip{padding:5px 12px;border-radius:20px;font-size:12px;font-weight:500;cursor:pointer;border:1px solid var(--border);background:var(--s1);color:var(--dim);transition:all .15s}
+.cat-chip.on{background:var(--blue);color:#fff;border-color:var(--blue)}
+
+/* TOAST */
+.toast{position:fixed;bottom:24px;right:24px;padding:12px 18px;border-radius:var(--r2);font-size:13px;font-weight:600;color:#fff;z-index:9999;transform:translateY(80px);opacity:0;transition:all .3s;pointer-events:none;display:flex;align-items:center;gap:8px}
+.toast.show{transform:translateY(0);opacity:1}
+.toast.success{background:var(--green)}
+.toast.error{background:var(--red)}
+.toast.info{background:var(--blue)}
+
+/* RESPONSIVE */
+@media(max-width:768px){.sidenav{display:none}.kpi-grid{grid-template-columns:repeat(2,1fr)}.g2,.g3{grid-template-columns:1fr}}
+::-webkit-scrollbar{width:5px;height:5px}
+::-webkit-scrollbar-track{background:transparent}
+::-webkit-scrollbar-thumb{background:var(--border2);border-radius:3px}
+</style>
+</head>
+<body>
+
+<!-- API MODAL -->
+<div class="modal-ov" id="apiModal">
+  <div class="modal">
+    <div style="font-size:28px;margin-bottom:10px">🤖</div>
+    <h2>Activar Asistente IA</h2>
+    <p>Ingresa tu API key de Anthropic para habilitar el chatbot inteligente. El sistema funciona completo sin IA — esta key solo activa el chat.</p>
+    <div class="form-group" style="margin-bottom:12px">
+      <label>API Key</label>
+      <input type="password" id="apiKeyInput" placeholder="sk-ant-api03-...">
+    </div>
+    <button class="btn btn-primary" style="width:100%" onclick="saveKey()">Activar IA</button>
+    <div class="modal-skip" onclick="skipKey()">Usar sin IA (solo dashboard)</div>
+    <div class="modal-note">Tu key se guarda en sessionStorage · Solo este navegador · console.anthropic.com</div>
+  </div>
+</div>
+
+<!-- TOAST -->
+<div class="toast" id="toast"></div>
+
+<!-- TOPBAR -->
+<div class="topbar">
+  <div class="logo">
+    <div class="logo-icon">📦</div>
+    <div>
+      <div class="logo-text">Control de Inventario</div>
+      <div class="logo-sub">Sistema de Entradas y Salidas</div>
+    </div>
+  </div>
+  <div class="topbar-alerts" id="topAlerts"></div>
+</div>
+
+<div class="layout">
+  <!-- SIDEBAR -->
+  <nav class="sidenav">
+    <div class="nav-section">Principal</div>
+    <button class="nav-btn active" onclick="nav('dashboard',this)"><span class="nav-icon">📊</span>Dashboard</button>
+    <button class="nav-btn" onclick="nav('alertas',this)"><span class="nav-icon">🔔</span>Alertas<span class="nav-badge" id="alertBadge">0</span></button>
+
+    <div class="nav-section">Operaciones</div>
+    <button class="nav-btn" onclick="nav('entrada',this)"><span class="nav-icon">⬇️</span>Nueva Entrada</button>
+    <button class="nav-btn" onclick="nav('salida',this)"><span class="nav-icon">⬆️</span>Nueva Salida</button>
+    <button class="nav-btn" onclick="nav('registro',this)"><span class="nav-icon">📋</span>Historial</button>
+
+    <div class="nav-section">Catálogo</div>
+    <button class="nav-btn" onclick="nav('productos',this)"><span class="nav-icon">🏷️</span>Productos</button>
+    <button class="nav-btn" onclick="nav('nuevo-producto',this)"><span class="nav-icon">➕</span>Nuevo Producto</button>
+
+    <div class="nav-section">IA</div>
+    <button class="nav-btn" onclick="nav('chatbot',this)"><span class="nav-icon">🤖</span>Asistente IA</button>
+  </nav>
+
+  <!-- MAIN -->
+  <main class="main">
+
+    <!-- ══════ DASHBOARD ══════ -->
+    <div class="page active" id="page-dashboard">
+      <div>
+        <div class="page-title">Dashboard General</div>
+        <div class="page-sub" id="dash-date"></div>
+      </div>
+
+      <div class="kpi-grid">
+        <div class="kpi">
+          <div class="kpi-top"><div class="kpi-label">Total Productos</div><div class="kpi-icon" style="background:#eff6ff">📦</div></div>
+          <div class="kpi-value" id="k-total">0</div><div class="kpi-sub">en catálogo</div>
+        </div>
+        <div class="kpi">
+          <div class="kpi-top"><div class="kpi-label">Stock OK</div><div class="kpi-icon" style="background:#f0fdf4">✅</div></div>
+          <div class="kpi-value" style="color:var(--green)" id="k-ok">0</div><div class="kpi-sub">sobre stock mínimo</div>
+        </div>
+        <div class="kpi">
+          <div class="kpi-top"><div class="kpi-label">Bajo Stock</div><div class="kpi-icon" style="background:#fffbeb">⚠️</div></div>
+          <div class="kpi-value" style="color:var(--amber)" id="k-low">0</div><div class="kpi-sub">cerca del mínimo</div>
+        </div>
+        <div class="kpi">
+          <div class="kpi-top"><div class="kpi-label">Críticos / Sin stock</div><div class="kpi-icon" style="background:#fef2f2">🚨</div></div>
+          <div class="kpi-value" style="color:var(--red)" id="k-crit">0</div><div class="kpi-sub">requieren reposición</div>
+        </div>
+      </div>
+
+      <div class="g2">
+        <div class="card">
+          <div class="card-header"><div><div class="card-title">Stock por Categoría</div><div class="card-sub">Inventario actual vs mínimo</div></div></div>
+          <div class="chart-wrap" style="height:220px"><canvas id="c-cat"></canvas></div>
+        </div>
+        <div class="card">
+          <div class="card-header"><div><div class="card-title">Movimientos recientes</div><div class="card-sub">Entradas y salidas</div></div></div>
+          <div class="chart-wrap" style="height:220px"><canvas id="c-mov"></canvas></div>
+        </div>
+      </div>
+
+      <div class="card">
+        <div class="card-header">
+          <div class="card-title">Estado del Inventario — Productos con movimiento</div>
+          <button class="btn btn-ghost btn-sm" onclick="nav('productos',document.querySelector('.nav-btn:nth-child(9)'))">Ver todos</button>
+        </div>
+        <div class="tscroll"><table>
+          <thead><tr><th>Código</th><th>Descripción</th><th>Categoría</th><th>Stock actual</th><th>Mínimo</th><th>Estado</th><th>Acciones</th></tr></thead>
+          <tbody id="t-dash"></tbody>
+        </table></div>
+      </div>
+    </div>
+
+    <!-- ══════ ALERTAS ══════ -->
+    <div class="page" id="page-alertas">
+      <div><div class="page-title">Centro de Alertas</div><div class="page-sub">Productos que requieren atención inmediata</div></div>
+      <div id="alerts-list"></div>
+    </div>
+
+    <!-- ══════ ENTRADA ══════ -->
+    <div class="page" id="page-entrada">
+      <div><div class="page-title">Registrar Entrada</div><div class="page-sub">Ingreso de productos al almacén</div></div>
+      <div class="card">
+        <div style="display:flex;align-items:center;gap:10px;margin-bottom:18px;padding:10px 14px;background:var(--green-bg);border:1px solid var(--green-border);border-radius:var(--r)">
+          <span style="font-size:20px">⬇️</span>
+          <span style="font-size:13px;font-weight:600;color:var(--green)">Modo Entrada — Aumenta el inventario</span>
+        </div>
+        <div class="form-grid">
+          <div class="form-group">
+            <label>Fecha *</label>
+            <input type="date" id="e-fecha">
+          </div>
+          <div class="form-group">
+            <label>Producto *</label>
+            <select id="e-prod" onchange="fillEntradaProd()">
+              <option value="">Seleccionar producto...</option>
+            </select>
+          </div>
+          <div class="form-group">
+            <label>Código</label>
+            <input type="text" id="e-cod" readonly placeholder="Auto" style="background:var(--s2)">
+          </div>
+          <div class="form-group">
+            <label>Proveedor</label>
+            <input type="text" id="e-prov" placeholder="Nombre del proveedor">
+          </div>
+          <div class="form-group">
+            <label>Unidad de Medida</label>
+            <input type="text" id="e-udm" readonly style="background:var(--s2)">
+          </div>
+          <div class="form-group">
+            <label>Cantidad a Ingresar *</label>
+            <input type="number" id="e-cant" min="1" placeholder="0" oninput="calcEntrada()">
+          </div>
+          <div class="form-group">
+            <label>Stock Actual</label>
+            <input type="number" id="e-stock" readonly style="background:var(--s2)">
+          </div>
+          <div class="form-group">
+            <label>Stock tras entrada</label>
+            <input type="number" id="e-nuevo" readonly style="background:var(--green-bg);border-color:var(--green-border);color:var(--green);font-weight:600">
+          </div>
+          <div class="form-group full">
+            <label>Observaciones</label>
+            <textarea id="e-obs" placeholder="Notas sobre esta entrada..."></textarea>
+          </div>
+        </div>
+        <div class="btn-group" style="margin-top:6px">
+          <button class="btn btn-success" onclick="registrarMovimiento('entrada')">⬇️ Registrar Entrada</button>
+          <button class="btn btn-ghost" onclick="limpiarForm('e')">Limpiar</button>
+        </div>
+      </div>
+    </div>
+
+    <!-- ══════ SALIDA ══════ -->
+    <div class="page" id="page-salida">
+      <div><div class="page-title">Registrar Salida</div><div class="page-sub">Egreso de productos del almacén</div></div>
+      <div class="card">
+        <div style="display:flex;align-items:center;gap:10px;margin-bottom:18px;padding:10px 14px;background:var(--red-bg);border:1px solid var(--red-border);border-radius:var(--r)">
+          <span style="font-size:20px">⬆️</span>
+          <span style="font-size:13px;font-weight:600;color:var(--red)">Modo Salida — Reduce el inventario</span>
+        </div>
+        <div class="form-grid">
+          <div class="form-group">
+            <label>Fecha *</label>
+            <input type="date" id="s-fecha">
+          </div>
+          <div class="form-group">
+            <label>Producto *</label>
+            <select id="s-prod" onchange="fillSalidaProd()">
+              <option value="">Seleccionar producto...</option>
+            </select>
+          </div>
+          <div class="form-group">
+            <label>Código</label>
+            <input type="text" id="s-cod" readonly style="background:var(--s2)">
+          </div>
+          <div class="form-group">
+            <label>Entregado a</label>
+            <input type="text" id="s-dest" placeholder="Persona o área receptora">
+          </div>
+          <div class="form-group">
+            <label>Unidad de Medida</label>
+            <input type="text" id="s-udm" readonly style="background:var(--s2)">
+          </div>
+          <div class="form-group">
+            <label>Cantidad a Retirar *</label>
+            <input type="number" id="s-cant" min="1" placeholder="0" oninput="calcSalida()">
+          </div>
+          <div class="form-group">
+            <label>Stock Actual</label>
+            <input type="number" id="s-stock" readonly style="background:var(--s2)">
+          </div>
+          <div class="form-group">
+            <label>Stock tras salida</label>
+            <input type="number" id="s-nuevo" readonly style="background:var(--red-bg);border-color:var(--red-border);color:var(--red);font-weight:600">
+          </div>
+          <div class="form-group full">
+            <label>Observaciones</label>
+            <textarea id="s-obs" placeholder="Motivo de la salida..."></textarea>
+          </div>
+        </div>
+        <div class="btn-group" style="margin-top:6px">
+          <button class="btn btn-danger" onclick="registrarMovimiento('salida')">⬆️ Registrar Salida</button>
+          <button class="btn btn-ghost" onclick="limpiarForm('s')">Limpiar</button>
+        </div>
+      </div>
+    </div>
+
+    <!-- ══════ HISTORIAL ══════ -->
+    <div class="page" id="page-registro">
+      <div><div class="page-title">Historial de Movimientos</div><div class="page-sub">Registro completo de entradas y salidas</div></div>
+      <div class="card">
+        <div style="display:flex;gap:10px;flex-wrap:wrap;margin-bottom:14px;align-items:center">
+          <input type="text" id="hist-search" placeholder="🔍 Buscar producto..." style="max-width:220px" oninput="renderHistorial()">
+          <select id="hist-tipo" onchange="renderHistorial()" style="max-width:160px">
+            <option value="">Todos los tipos</option>
+            <option value="entrada">Solo Entradas</option>
+            <option value="salida">Solo Salidas</option>
+          </select>
+          <select id="hist-prod" onchange="renderHistorial()" style="max-width:200px">
+            <option value="">Todos los productos</option>
+          </select>
+          <span id="hist-count" style="margin-left:auto;font-size:12px;color:var(--dim)"></span>
+        </div>
+        <div class="tscroll"><table>
+          <thead><tr><th>#</th><th>Fecha</th><th>Tipo</th><th>Código</th><th>Descripción</th><th>Categoría</th><th>UdM</th><th>Entrada</th><th>Salida</th><th>Proveedor/Destino</th><th>Obs.</th></tr></thead>
+          <tbody id="t-hist"></tbody>
+        </table></div>
+      </div>
+    </div>
+
+    <!-- ══════ PRODUCTOS ══════ -->
+    <div class="page" id="page-productos">
+      <div><div class="page-title">Catálogo de Productos</div><div class="page-sub">Gestión de inventario por producto</div></div>
+      <div class="cat-chips" id="cat-chips"></div>
+      <div class="card">
+        <div style="display:flex;gap:10px;margin-bottom:14px">
+          <input type="text" id="prod-search" placeholder="🔍 Buscar..." style="max-width:260px" oninput="renderProductos()">
+          <button class="btn btn-primary btn-sm" onclick="nav('nuevo-producto',document.querySelector('.nav-btn:nth-child(10)'))">+ Nuevo Producto</button>
+        </div>
+        <div class="tscroll"><table>
+          <thead><tr><th>Código</th><th>Descripción</th><th>UdM</th><th>Categoría</th><th>Stock</th><th>Mínimo</th><th>Cobertura</th><th>Estado</th><th>Acciones</th></tr></thead>
+          <tbody id="t-prods"></tbody>
+        </table></div>
+      </div>
+    </div>
+
+    <!-- ══════ NUEVO PRODUCTO ══════ -->
+    <div class="page" id="page-nuevo-producto">
+      <div><div class="page-title">Nuevo Producto</div><div class="page-sub">Agregar producto al catálogo</div></div>
+      <div class="card">
+        <div class="form-grid">
+          <div class="form-group">
+            <label>Descripción / Nombre *</label>
+            <input type="text" id="np-nombre" placeholder="Ej: Arroz bolsas">
+          </div>
+          <div class="form-group">
+            <label>Categoría *</label>
+            <select id="np-cat">
+              <option value="Proteínas">Proteínas</option>
+              <option value="Bebidas">Bebidas</option>
+              <option value="Bebidas alcohólicas">Bebidas alcohólicas</option>
+              <option value="Granos">Granos</option>
+              <option value="Productos procesados">Productos procesados</option>
+              <option value="Cereales y Pastas">Cereales y Pastas</option>
+              <option value="Higiene">Higiene</option>
+              <option value="Otro">Otro</option>
+            </select>
+          </div>
+          <div class="form-group">
+            <label>Unidad de Medida</label>
+            <select id="np-udm">
+              <option value="und.">und.</option>
+              <option value="file">file</option>
+              <option value="lb.">lb.</option>
+              <option value="kg">kg</option>
+              <option value="lt">lt</option>
+              <option value="caja">caja</option>
+              <option value="saco">saco</option>
+            </select>
+          </div>
+          <div class="form-group">
+            <label>Almacén</label>
+            <input type="text" id="np-alm" value="Almacén">
+          </div>
+          <div class="form-group">
+            <label>Stock Mínimo *</label>
+            <input type="number" id="np-min" min="0" placeholder="0">
+          </div>
+          <div class="form-group">
+            <label>Stock Inicial</label>
+            <input type="number" id="np-ini" min="0" value="0">
+          </div>
+        </div>
+        <div class="btn-group" style="margin-top:14px">
+          <button class="btn btn-primary" onclick="agregarProducto()">✅ Guardar Producto</button>
+          <button class="btn btn-ghost" onclick="nav('productos',document.querySelector('.nav-btn:nth-child(9)'))">Cancelar</button>
+        </div>
+      </div>
+    </div>
+
+    <!-- ══════ CHATBOT ══════ -->
+    <div class="page" id="page-chatbot">
+      <div><div class="page-title">Asistente IA</div><div class="page-sub">Consulta el inventario con lenguaje natural</div></div>
+      <div class="card" style="flex:1">
+        <div class="chat-wrap">
+          <div class="chat-head">
+            <div class="ai-av">🤖</div>
+            <div>
+              <div style="font-size:14px;font-weight:700">Asistente de Inventario</div>
+              <div style="font-size:12px;color:var(--dim)" id="ai-status">Cargando...</div>
+            </div>
+          </div>
+          <div class="sugs" id="sugs">
+            <button class="sug" onclick="sendSug(this)">¿Qué productos necesitan reposición?</button>
+            <button class="sug" onclick="sendSug(this)">¿Cuánto stock tengo de Pollo?</button>
+            <button class="sug" onclick="sendSug(this)">Resumen del inventario actual</button>
+            <button class="sug" onclick="sendSug(this)">¿Qué bebidas están en cero?</button>
+            <button class="sug" onclick="sendSug(this)">¿Cuántas entradas se han registrado?</button>
+            <button class="sug" onclick="sendSug(this)">Lista de productos críticos</button>
+          </div>
+          <div class="chat-msgs" id="chat-msgs" style="flex:1;min-height:300px"></div>
+          <div class="chat-in-row">
+            <textarea class="chat-in" id="chat-in" placeholder="Pregunta sobre el inventario..." onkeydown="chatKey(event)"></textarea>
+            <button class="send-btn" id="send-btn" onclick="sendChat()">Enviar →</button>
+          </div>
+        </div>
+      </div>
+    </div>
+
+  </main>
+</div>
+
+<script>
+// ═══════════════════════════════════════════════════════
+// DATOS INICIALES (del Excel c.xlsx)
+// ═══════════════════════════════════════════════════════
+const CATEGORIAS = {
+  '1':'Proteínas','2':'Bebidas','3':'Bebidas alcohólicas',
+  '4':'Granos','5':'Productos procesados','6':'Cereales y Pastas','7':'Higiene'
+};
+const CAT_COLORS = {
+  'Proteínas':'#ef4444','Bebidas':'#3b82f6','Bebidas alcohólicas':'#8b5cf6',
+  'Granos':'#f59e0b','Productos procesados':'#10b981','Cereales y Pastas':'#f97316','Higiene':'#06b6d4','Otro':'#6b7280'
+};
+
+// localStorage key
+const LS = 'inventario_v1';
+
+function defaultState() {
+  return {
+    productos: [
+      {id:'1000001',nombre:'Pollo',udm:'und.',categoria:'Proteínas',almacen:'Almacén',minimo:100,stock:60},
+      {id:'1000002',nombre:'Picadillo',udm:'und.',categoria:'Proteínas',almacen:'Almacén',minimo:60,stock:45},
+      {id:'1000003',nombre:'Hígado',udm:'und.',categoria:'Proteínas',almacen:'Almacén',minimo:20,stock:-6},
+      {id:'1000004',nombre:'Pechuga de pollo',udm:'und.',categoria:'Proteínas',almacen:'Almacén',minimo:5,stock:-2},
+      {id:'1000005',nombre:'Huevos',udm:'file',categoria:'Proteínas',almacen:'Almacén',minimo:30,stock:-20},
+      {id:'1000006',nombre:'Salchichas',udm:'und.',categoria:'Proteínas',almacen:'Almacén',minimo:40,stock:95},
+      {id:'1000007',nombre:'Carne de Res',udm:'und.',categoria:'Proteínas',almacen:'Almacén',minimo:10,stock:18},
+      {id:'1000008',nombre:'Jamón',udm:'und.',categoria:'Proteínas',almacen:'Almacén',minimo:15,stock:30},
+      {id:'1000009',nombre:'Chorizo',udm:'und.',categoria:'Proteínas',almacen:'Almacén',minimo:15,stock:10},
+      {id:'1000010',nombre:'Jamonada',udm:'und.',categoria:'Proteínas',almacen:'Almacén',minimo:15,stock:55},
+      {id:'2000001',nombre:'Refresco lata',udm:'und.',categoria:'Bebidas',almacen:'Almacén',minimo:48,stock:0},
+      {id:'2000002',nombre:'Refresco pomo',udm:'und.',categoria:'Bebidas',almacen:'Almacén',minimo:24,stock:0},
+      {id:'2000003',nombre:'Jugos',udm:'und.',categoria:'Bebidas',almacen:'Almacén',minimo:72,stock:0},
+      {id:'2000004',nombre:'Agua de melón Ritz',udm:'und.',categoria:'Bebidas',almacen:'Almacén',minimo:48,stock:0},
+      {id:'2000005',nombre:'Malta guajira',udm:'und.',categoria:'Bebidas',almacen:'Almacén',minimo:48,stock:0},
+      {id:'2000006',nombre:'Jugos de lata',udm:'und.',categoria:'Bebidas',almacen:'Almacén',minimo:72,stock:0},
+      {id:'3000001',nombre:'Wisky',udm:'und.',categoria:'Bebidas alcohólicas',almacen:'Almacén',minimo:12,stock:0},
+      {id:'3000002',nombre:'Vodka',udm:'und.',categoria:'Bebidas alcohólicas',almacen:'Almacén',minimo:12,stock:0},
+      {id:'3000003',nombre:'Cerveza',udm:'und.',categoria:'Bebidas alcohólicas',almacen:'Almacén',minimo:72,stock:0},
+      {id:'3000004',nombre:'Ron nacional',udm:'und.',categoria:'Bebidas alcohólicas',almacen:'Almacén',minimo:12,stock:0},
+      {id:'3000005',nombre:'Ron importado',udm:'und.',categoria:'Bebidas alcohólicas',almacen:'Almacén',minimo:12,stock:0},
+      {id:'3000006',nombre:'Cerveza por caja',udm:'und.',categoria:'Bebidas alcohólicas',almacen:'Almacén',minimo:5,stock:0},
+      {id:'4000001',nombre:'Arroz saco',udm:'und.',categoria:'Granos',almacen:'Almacén',minimo:10,stock:0},
+      {id:'4000002',nombre:'Arroz bolsas',udm:'und.',categoria:'Granos',almacen:'Almacén',minimo:25,stock:0},
+      {id:'4000004',nombre:'Arroz Importado',udm:'und.',categoria:'Granos',almacen:'Almacén',minimo:20,stock:0},
+      {id:'4000005',nombre:'Frijoles saco',udm:'und.',categoria:'Granos',almacen:'Almacén',minimo:2,stock:0},
+      {id:'4000006',nombre:'Frijoles',udm:'und.',categoria:'Granos',almacen:'Almacén',minimo:25,stock:0},
+      {id:'4000007',nombre:'Frijoles importados',udm:'und.',categoria:'Granos',almacen:'Almacén',minimo:20,stock:0},
+      {id:'5000001',nombre:'Galletas paquete grande',udm:'und.',categoria:'Productos procesados',almacen:'Almacén',minimo:12,stock:0},
+      {id:'5000002',nombre:'Galletas',udm:'und.',categoria:'Productos procesados',almacen:'Almacén',minimo:21,stock:0},
+      {id:'5000003',nombre:'Mayonesa',udm:'und.',categoria:'Productos procesados',almacen:'Almacén',minimo:10,stock:0},
+      {id:'5000004',nombre:'Pasta de bocaditos',udm:'und.',categoria:'Productos procesados',almacen:'Almacén',minimo:10,stock:0},
+      {id:'5000005',nombre:'Leche condensada',udm:'und.',categoria:'Productos procesados',almacen:'Almacén',minimo:24,stock:0},
+      {id:'5000006',nombre:'Pasta de tomates',udm:'und.',categoria:'Productos procesados',almacen:'Almacén',minimo:24,stock:0},
+      {id:'5000007',nombre:'Aceite 900 ml',udm:'und.',categoria:'Productos procesados',almacen:'Almacén',minimo:80,stock:0},
+      {id:'5000008',nombre:'Aceite 1 Lt',udm:'und.',categoria:'Productos procesados',almacen:'Almacén',minimo:80,stock:0},
+      {id:'5000009',nombre:'Salsa para pizzas',udm:'und.',categoria:'Productos procesados',almacen:'Almacén',minimo:24,stock:0},
+      {id:'5000010',nombre:'Café',udm:'und.',categoria:'Productos procesados',almacen:'Almacén',minimo:25,stock:0},
+      {id:'5000011',nombre:'Comino',udm:'und.',categoria:'Productos procesados',almacen:'Almacén',minimo:5,stock:0},
+      {id:'5000012',nombre:'Sazón Completo',udm:'und.',categoria:'Productos procesados',almacen:'Almacén',minimo:5,stock:0},
+      {id:'6000001',nombre:'Harina',udm:'und.',categoria:'Cereales y Pastas',almacen:'Almacén',minimo:90,stock:0},
+      {id:'6000002',nombre:'Harina saco',udm:'und.',categoria:'Cereales y Pastas',almacen:'Almacén',minimo:20,stock:0},
+      {id:'6000003',nombre:'Spaguettis 500 gr',udm:'lb.',categoria:'Cereales y Pastas',almacen:'Almacén',minimo:10,stock:0},
+      {id:'6000004',nombre:'Spaguettis 350 gr',udm:'und.',categoria:'Cereales y Pastas',almacen:'Almacén',minimo:10,stock:0},
+      {id:'6000005',nombre:'Coditos',udm:'und.',categoria:'Cereales y Pastas',almacen:'Almacén',minimo:10,stock:0},
+      {id:'6000006',nombre:'Fideos',udm:'und.',categoria:'Cereales y Pastas',almacen:'Almacén',minimo:10,stock:0},
+      {id:'7000001',nombre:'Jabón',udm:'und.',categoria:'Higiene',almacen:'Almacén',minimo:30,stock:0},
+      {id:'7000002',nombre:'Detergente',udm:'und.',categoria:'Higiene',almacen:'Almacén',minimo:20,stock:0},
+    ],
+    movimientos: [
+      {id:1,fecha:'2026-01-01',tipo:'entrada',codigo:'1000001',nombre:'Pollo',categoria:'Proteínas',udm:'und.',cantidad:100,proveedor:'',destino:'',obs:''},
+      {id:2,fecha:'2026-01-02',tipo:'salida',codigo:'1000001',nombre:'Pollo',categoria:'Proteínas',udm:'und.',cantidad:47,proveedor:'',destino:'',obs:''},
+      {id:3,fecha:'2026-01-03',tipo:'entrada',codigo:'1000002',nombre:'Picadillo',categoria:'Proteínas',udm:'und.',cantidad:60,proveedor:'',destino:'',obs:''},
+      {id:4,fecha:'2026-01-03',tipo:'salida',codigo:'1000002',nombre:'Picadillo',categoria:'Proteínas',udm:'und.',cantidad:15,proveedor:'',destino:'',obs:''},
+      {id:5,fecha:'2026-01-04',tipo:'salida',codigo:'1000003',nombre:'Hígado',categoria:'Proteínas',udm:'und.',cantidad:6,proveedor:'',destino:'',obs:''},
+      {id:6,fecha:'2026-01-05',tipo:'salida',codigo:'1000004',nombre:'Pechuga de pollo',categoria:'Proteínas',udm:'und.',cantidad:2,proveedor:'',destino:'',obs:''},
+      {id:7,fecha:'2026-01-06',tipo:'salida',codigo:'1000005',nombre:'Huevos',categoria:'Proteínas',udm:'file',cantidad:20,proveedor:'',destino:'',obs:''},
+      {id:8,fecha:'2026-01-07',tipo:'entrada',codigo:'1000006',nombre:'Salchichas',categoria:'Proteínas',udm:'und.',cantidad:100,proveedor:'',destino:'',obs:''},
+      {id:9,fecha:'2026-01-07',tipo:'salida',codigo:'1000006',nombre:'Salchichas',categoria:'Proteínas',udm:'und.',cantidad:5,proveedor:'',destino:'',obs:''},
+      {id:10,fecha:'2026-01-08',tipo:'entrada',codigo:'1000007',nombre:'Carne de Res',categoria:'Proteínas',udm:'und.',cantidad:20,proveedor:'',destino:'',obs:''},
+      {id:11,fecha:'2026-01-08',tipo:'salida',codigo:'1000007',nombre:'Carne de Res',categoria:'Proteínas',udm:'und.',cantidad:2,proveedor:'',destino:'',obs:''},
+      {id:12,fecha:'2026-01-09',tipo:'entrada',codigo:'1000008',nombre:'Jamón',categoria:'Proteínas',udm:'und.',cantidad:35,proveedor:'',destino:'',obs:''},
+      {id:13,fecha:'2026-01-09',tipo:'salida',codigo:'1000008',nombre:'Jamón',categoria:'Proteínas',udm:'und.',cantidad:5,proveedor:'',destino:'',obs:''},
+      {id:14,fecha:'2026-01-10',tipo:'entrada',codigo:'1000009',nombre:'Chorizo',categoria:'Proteínas',udm:'und.',cantidad:20,proveedor:'',destino:'',obs:''},
+      {id:15,fecha:'2026-01-10',tipo:'salida',codigo:'1000009',nombre:'Chorizo',categoria:'Proteínas',udm:'und.',cantidad:10,proveedor:'',destino:'',obs:''},
+      {id:16,fecha:'2026-01-11',tipo:'entrada',codigo:'1000010',nombre:'Jamonada',categoria:'Proteínas',udm:'und.',cantidad:60,proveedor:'',destino:'',obs:''},
+      {id:17,fecha:'2026-01-11',tipo:'salida',codigo:'1000010',nombre:'Jamonada',categoria:'Proteínas',udm:'und.',cantidad:5,proveedor:'',destino:'',obs:''},
+      {id:18,fecha:'2026-01-12',tipo:'entrada',codigo:'1000001',nombre:'Pollo',categoria:'Proteínas',udm:'und.',cantidad:7,proveedor:'',destino:'',obs:''},
+    ],
+    nextId: 19
+  };
+}
+
+// ═══════════════════════════════════════════════════════
+// STATE
+// ═══════════════════════════════════════════════════════
+let DB = JSON.parse(localStorage.getItem(LS) || 'null') || defaultState();
+let apiKey = '';
+let chatHistory = [];
+let charts = {};
+let activeCat = 'all';
+
+function saveDB(){ localStorage.setItem(LS, JSON.stringify(DB)); }
+
+// ═══════════════════════════════════════════════════════
+// API KEY
+// ═══════════════════════════════════════════════════════
+function saveKey(){
+  const k = document.getElementById('apiKeyInput').value.trim();
+  if(!k.startsWith('sk-ant')){ showToast('La key debe comenzar con sk-ant-','error'); return; }
+  apiKey = k; sessionStorage.setItem('ak', k);
+  document.getElementById('apiModal').style.display='none';
+  initApp();
+}
+function skipKey(){
+  document.getElementById('apiModal').style.display='none';
+  initApp();
+}
+window.onload=()=>{
+  const c = sessionStorage.getItem('ak');
+  if(c && c.startsWith('sk-ant')){ apiKey=c; document.getElementById('apiModal').style.display='none'; }
+  initApp();
+};
+
+// ═══════════════════════════════════════════════════════
+// INIT
+// ═══════════════════════════════════════════════════════
+function initApp(){
+  document.getElementById('dash-date').textContent = 'Actualizado: ' + new Date().toLocaleDateString('es-ES',{weekday:'long',year:'numeric',month:'long',day:'numeric'});
+  document.getElementById('ai-status').textContent = apiKey ? '✅ IA activa · Claude Sonnet' : '⚠️ Sin API key · Solo consultas básicas';
+  const today = new Date().toISOString().split('T')[0];
+  document.getElementById('e-fecha').value = today;
+  document.getElementById('s-fecha').value = today;
+  fillSelects();
+  buildCatChips();
+  renderDashboard();
+  renderAlerts();
+  renderHistorial();
+  renderProductos();
+  updateTopAlerts();
+  initChat();
+}
+
+// ═══════════════════════════════════════════════════════
+// NAVIGATION
+// ═══════════════════════════════════════════════════════
+function nav(id, btn){
+  document.querySelectorAll('.page').forEach(p=>p.classList.remove('active'));
+  document.querySelectorAll('.nav-btn').forEach(b=>b.classList.remove('active'));
+  document.getElementById('page-'+id).classList.add('active');
+  if(btn) btn.classList.add('active');
+  if(id==='productos') renderProductos();
+  if(id==='registro') renderHistorial();
+  if(id==='dashboard') renderDashboard();
+  if(id==='alertas') renderAlerts();
+}
+
+// ═══════════════════════════════════════════════════════
+// HELPERS
+// ═══════════════════════════════════════════════════════
+function getProd(id){ return DB.productos.find(p=>p.id===id); }
+function stockStatus(p){
+  if(p.stock<=0) return 'danger';
+  if(p.stock<p.minimo) return 'warn';
+  if(p.stock<p.minimo*1.2) return 'ok-low';
+  return 'ok';
+}
+function statusBadge(p){
+  const s=stockStatus(p);
+  if(s==='danger') return `<span class="badge badge-danger">🚨 Crítico (${p.stock})</span>`;
+  if(s==='warn') return `<span class="badge badge-warn">⚠️ Bajo (${p.stock})</span>`;
+  if(s==='ok-low') return `<span class="badge badge-info">🔵 Justo (${p.stock})</span>`;
+  return `<span class="badge badge-ok">✅ OK (${p.stock})</span>`;
+}
+function progBar(p){
+  const pct = p.minimo>0 ? Math.max(0,Math.min(100,p.stock/p.minimo*100)) : (p.stock>0?100:0);
+  const col = p.stock<=0?'var(--red)':p.stock<p.minimo?'var(--amber)':'var(--green)';
+  return `<div class="prog-wrap"><div class="prog-fill" style="width:${pct}%;background:${col}"></div></div>`;
+}
+function showToast(msg,type='success'){
+  const t=document.getElementById('toast');
+  t.textContent=(type==='success'?'✅ ':type==='error'?'❌ ':'ℹ️ ')+msg;
+  t.className='toast show '+type;
+  setTimeout(()=>t.classList.remove('show'),3000);
+}
+function nextCode(cat){
+  const prefix = Object.entries(CATEGORIAS).find(([k,v])=>v===cat);
+  if(!prefix) return String(Date.now()).slice(-7);
+  const p = prefix[0]+'000000';
+  const existing = DB.productos.filter(pr=>pr.id.startsWith(prefix[0])).map(pr=>parseInt(pr.id));
+  let n = parseInt(p)+1;
+  while(existing.includes(n)) n++;
+  return String(n);
+}
+
+// ═══════════════════════════════════════════════════════
+// FILL SELECTS
+// ═══════════════════════════════════════════════════════
+function fillSelects(){
+  ['e-prod','s-prod','hist-prod'].forEach(id=>{
+    const el=document.getElementById(id);
+    if(!el) return;
+    const cur=el.value;
+    const isHist=id==='hist-prod';
+    el.innerHTML=`<option value="">${isHist?'Todos los productos':'Seleccionar producto...'}</option>`;
+    [...DB.productos].sort((a,b)=>a.nombre.localeCompare(b.nombre))
+      .forEach(p=>{ el.innerHTML+=`<option value="${p.id}">${p.nombre} [${p.id}]</option>`; });
+    if(cur) el.value=cur;
+  });
+}
+
+// ═══════════════════════════════════════════════════════
+// DASHBOARD
+// ═══════════════════════════════════════════════════════
+function renderDashboard(){
+  const prods=DB.productos;
+  const ok=prods.filter(p=>stockStatus(p)==='ok'||stockStatus(p)==='ok-low').length;
+  const low=prods.filter(p=>stockStatus(p)==='warn').length;
+  const crit=prods.filter(p=>stockStatus(p)==='danger').length;
+  document.getElementById('k-total').textContent=prods.length;
+  document.getElementById('k-ok').textContent=ok;
+  document.getElementById('k-low').textContent=low;
+  document.getElementById('k-crit').textContent=crit;
+
+  // Chart: stock por categoría
+  const cats=[...new Set(prods.map(p=>p.categoria))];
+  const catData=cats.map(c=>({
+    cat:c,
+    stock:prods.filter(p=>p.categoria===c).reduce((s,p)=>s+Math.max(0,p.stock),0),
+    min:prods.filter(p=>p.categoria===c).reduce((s,p)=>s+p.minimo,0),
+  }));
+  mkChart('c-cat','bar',{
+    labels:catData.map(c=>c.cat.length>12?c.cat.slice(0,10)+'…':c.cat),
+    datasets:[
+      {label:'Stock actual',data:catData.map(c=>c.stock),backgroundColor:catData.map(c=>CAT_COLORS[c.cat]||'#6b7280'),borderRadius:5},
+      {label:'Mínimo',data:catData.map(c=>c.min),backgroundColor:'rgba(0,0,0,0.08)',borderRadius:5},
+    ]
+  },{scales:{x:{grid:{display:false},ticks:{color:'#9ca3af',font:{size:10}}},y:{grid:{color:'#f3f4f6'},ticks:{color:'#9ca3af',font:{size:10}}}}});
+
+  // Chart: movimientos por día (últimos 10)
+  const movs=[...DB.movimientos].sort((a,b)=>a.fecha<b.fecha?1:-1).slice(0,10).reverse();
+  const movDates=[...new Set(movs.map(m=>m.fecha))];
+  const entradas=movDates.map(d=>movs.filter(m=>m.fecha===d&&m.tipo==='entrada').reduce((s,m)=>s+m.cantidad,0));
+  const salidas=movDates.map(d=>movs.filter(m=>m.fecha===d&&m.tipo==='salida').reduce((s,m)=>s+m.cantidad,0));
+  mkChart('c-mov','line',{
+    labels:movDates.map(d=>d.slice(5)),
+    datasets:[
+      {label:'Entradas',data:entradas,borderColor:'#16a34a',backgroundColor:'rgba(22,163,74,.1)',tension:.4,fill:true,pointRadius:3},
+      {label:'Salidas',data:salidas,borderColor:'#dc2626',backgroundColor:'rgba(220,38,38,.1)',tension:.4,fill:true,pointRadius:3},
+    ]
+  },{scales:{x:{grid:{display:false},ticks:{color:'#9ca3af',font:{size:10}}},y:{grid:{color:'#f3f4f6'},ticks:{color:'#9ca3af',font:{size:10}}}}});
+
+  // Table: only products with stock or movement
+  const withMovement=new Set(DB.movimientos.map(m=>m.codigo));
+  const showProds=prods.filter(p=>p.stock!==0||withMovement.has(p.id)).sort((a,b)=>stockStatus(a)<stockStatus(b)?1:-1);
+  document.getElementById('t-dash').innerHTML=showProds.map(p=>`
+    <tr>
+      <td><span style="font-family:var(--mono);font-size:11px;color:var(--dim)">${p.id}</span></td>
+      <td style="font-weight:500">${p.nombre}</td>
+      <td><span class="badge badge-neutral" style="font-size:10px">${p.categoria}</span></td>
+      <td class="num" style="font-weight:600">${p.stock}</td>
+      <td class="num">${p.minimo}</td>
+      <td>${statusBadge(p)}</td>
+      <td>
+        <div style="display:flex;gap:4px">
+          <button class="btn btn-ghost btn-sm" onclick="quickEntrada('${p.id}')">⬇️ Entrada</button>
+          <button class="btn btn-ghost btn-sm" onclick="quickSalida('${p.id}')">⬆️ Salida</button>
+        </div>
+      </td>
+    </tr>`).join('');
+}
+
+// ═══════════════════════════════════════════════════════
+// ALERTS
+// ═══════════════════════════════════════════════════════
+function renderAlerts(){
+  const criticos=DB.productos.filter(p=>p.stock<=0).sort((a,b)=>a.stock-b.stock);
+  const bajos=DB.productos.filter(p=>p.stock>0&&p.stock<p.minimo);
+  const total=criticos.length+bajos.length;
+  document.getElementById('alertBadge').textContent=total;
+
+  let html='';
+  if(criticos.length){
+    html+=`<div style="font-size:12px;font-weight:700;color:var(--red);margin:0 0 8px;text-transform:uppercase;letter-spacing:.06em">🚨 Críticos — Sin Stock o Negativos (${criticos.length})</div>`;
+    html+=criticos.map(p=>`
+      <div class="alert-item danger">
+        <span class="alert-icon">🚨</span>
+        <div class="alert-body">
+          <div class="alert-name">${p.nombre} <span style="font-family:var(--mono);font-size:10px;color:var(--dim)">[${p.id}]</span></div>
+          <div class="alert-detail">Stock: <strong>${p.stock}</strong> ${p.udm} · Mínimo: ${p.minimo} ${p.udm} · ${p.categoria}</div>
+        </div>
+        <button class="alert-action danger" onclick="quickEntrada('${p.id}')">+ Entrada</button>
+      </div>`).join('');
+  }
+  if(bajos.length){
+    html+=`<div style="font-size:12px;font-weight:700;color:var(--amber);margin:${criticos.length?'16px':0} 0 8px;text-transform:uppercase;letter-spacing:.06em">⚠️ Bajo Stock — Por debajo del mínimo (${bajos.length})</div>`;
+    html+=bajos.map(p=>`
+      <div class="alert-item warning">
+        <span class="alert-icon">⚠️</span>
+        <div class="alert-body">
+          <div class="alert-name">${p.nombre} <span style="font-family:var(--mono);font-size:10px;color:var(--dim)">[${p.id}]</span></div>
+          <div class="alert-detail">Stock: <strong>${p.stock}</strong> ${p.udm} · Mínimo: ${p.minimo} ${p.udm} · Faltan ${p.minimo-p.stock}</div>
+        </div>
+        <button class="alert-action warning" onclick="quickEntrada('${p.id}')">+ Entrada</button>
+      </div>`).join('');
+  }
+  if(!total) html='<div style="text-align:center;padding:40px;color:var(--dim)">✅ Todo el inventario está en niveles correctos</div>';
+  document.getElementById('alerts-list').innerHTML=html;
+
+  // Top bar
+  updateTopAlerts();
+}
+function updateTopAlerts(){
+  const crit=DB.productos.filter(p=>p.stock<=0).length;
+  const bajo=DB.productos.filter(p=>p.stock>0&&p.stock<p.minimo).length;
+  let html='';
+  if(crit) html+=`<span class="alert-chip chip-red" onclick="nav('alertas',document.querySelectorAll('.nav-btn')[1])">🚨 ${crit} Críticos</span>`;
+  if(bajo) html+=`<span class="alert-chip chip-amber" onclick="nav('alertas',document.querySelectorAll('.nav-btn')[1])">⚠️ ${bajo} Bajo Stock</span>`;
+  document.getElementById('topAlerts').innerHTML=html;
+}
+
+// ═══════════════════════════════════════════════════════
+// FORMULARIOS ENTRADA / SALIDA
+// ═══════════════════════════════════════════════════════
+function fillEntradaProd(){
+  const id=document.getElementById('e-prod').value;
+  const p=getProd(id);
+  if(!p){ ['e-cod','e-udm','e-stock','e-nuevo'].forEach(x=>document.getElementById(x).value=''); return; }
+  document.getElementById('e-cod').value=p.id;
+  document.getElementById('e-udm').value=p.udm;
+  document.getElementById('e-stock').value=p.stock;
+  document.getElementById('e-nuevo').value='';
+  document.getElementById('e-cant').value='';
+}
+function fillSalidaProd(){
+  const id=document.getElementById('s-prod').value;
+  const p=getProd(id);
+  if(!p){ ['s-cod','s-udm','s-stock','s-nuevo'].forEach(x=>document.getElementById(x).value=''); return; }
+  document.getElementById('s-cod').value=p.id;
+  document.getElementById('s-udm').value=p.udm;
+  document.getElementById('s-stock').value=p.stock;
+  document.getElementById('s-nuevo').value='';
+  document.getElementById('s-cant').value='';
+}
+function calcEntrada(){
+  const pid=document.getElementById('e-prod').value;
+  const p=getProd(pid);
+  if(!p) return;
+  const cant=parseInt(document.getElementById('e-cant').value)||0;
+  document.getElementById('e-nuevo').value=p.stock+cant;
+}
+function calcSalida(){
+  const pid=document.getElementById('s-prod').value;
+  const p=getProd(pid);
+  if(!p) return;
+  const cant=parseInt(document.getElementById('s-cant').value)||0;
+  const nuevo=p.stock-cant;
+  const el=document.getElementById('s-nuevo');
+  el.value=nuevo;
+  el.style.color=nuevo<0?'var(--red)':nuevo<p.minimo?'var(--amber)':'var(--green)';
+}
+function limpiarForm(prefix){
+  ['prod','cod','prov','udm','cant','stock','nuevo','obs','dest','fecha'].forEach(f=>{
+    const el=document.getElementById(prefix+'-'+f);
+    if(el){ el.value= f==='fecha'?new Date().toISOString().split('T')[0]:''; }
+  });
+}
+function quickEntrada(id){
+  nav('entrada', document.querySelectorAll('.nav-btn')[2]);
+  setTimeout(()=>{ document.getElementById('e-prod').value=id; fillEntradaProd(); },50);
+}
+function quickSalida(id){
+  nav('salida', document.querySelectorAll('.nav-btn')[3]);
+  setTimeout(()=>{ document.getElementById('s-prod').value=id; fillSalidaProd(); },50);
+}
+
+function registrarMovimiento(tipo){
+  const pref = tipo==='entrada'?'e':'s';
+  const pid=document.getElementById(pref+'-prod').value;
+  const cant=parseInt(document.getElementById(pref+'-cant').value)||0;
+  const fecha=document.getElementById(pref+'-fecha').value;
+  if(!pid||!cant||!fecha){ showToast('Completa Producto, Fecha y Cantidad','error'); return; }
+  if(cant<=0){ showToast('La cantidad debe ser mayor a 0','error'); return; }
+
+  const p=getProd(pid);
+  if(tipo==='salida'&&p.stock<cant){
+    if(!confirm(`Stock insuficiente. Stock actual: ${p.stock}, cantidad solicitada: ${cant}. ¿Continuar de todas formas?`)) return;
+  }
+
+  const mov={
+    id:DB.nextId++, fecha, tipo, codigo:p.id, nombre:p.nombre,
+    categoria:p.categoria, udm:p.udm, cantidad:cant,
+    proveedor:document.getElementById(pref+'-prov')||'',
+    destino:document.getElementById(pref+'-dest')||'',
+    obs:document.getElementById(pref+'-obs').value||''
+  };
+  if(tipo==='entrada') mov.proveedor=(document.getElementById('e-prov')||{value:''}).value;
+  if(tipo==='salida') mov.destino=(document.getElementById('s-dest')||{value:''}).value;
+
+  DB.movimientos.push(mov);
+  if(tipo==='entrada') p.stock+=cant; else p.stock-=cant;
+  saveDB(); fillSelects();
+  showToast(`${tipo==='entrada'?'Entrada':'Salida'} registrada: ${cant} ${p.udm} de ${p.nombre}`,'success');
+  limpiarForm(pref);
+  renderAlerts(); updateTopAlerts();
+}
+
+// ═══════════════════════════════════════════════════════
+// HISTORIAL
+// ═══════════════════════════════════════════════════════
+function renderHistorial(){
+  const q=(document.getElementById('hist-search')||{value:''}).value.toLowerCase();
+  const tipo=(document.getElementById('hist-tipo')||{value:''}).value;
+  const prod=(document.getElementById('hist-prod')||{value:''}).value;
+  let list=[...DB.movimientos].filter(m=>{
+    if(q&&!m.nombre.toLowerCase().includes(q)&&!m.codigo.includes(q)) return false;
+    if(tipo&&m.tipo!==tipo) return false;
+    if(prod&&m.codigo!==prod) return false;
+    return true;
+  }).sort((a,b)=>b.id-a.id);
+  document.getElementById('hist-count').textContent=`${list.length} registros`;
+  document.getElementById('t-hist').innerHTML=list.map(m=>`
+    <tr>
+      <td style="color:var(--dim);font-size:11px">${m.id}</td>
+      <td style="white-space:nowrap">${m.fecha}</td>
+      <td>${m.tipo==='entrada'?'<span class="badge badge-ok">⬇️ Entrada</span>':'<span class="badge badge-danger">⬆️ Salida</span>'}</td>
+      <td><span style="font-family:var(--mono);font-size:11px">${m.codigo}</span></td>
+      <td style="font-weight:500">${m.nombre}</td>
+      <td><span class="badge badge-neutral" style="font-size:10px">${m.categoria}</span></td>
+      <td>${m.udm}</td>
+      <td class="num" style="color:var(--green);font-weight:600">${m.tipo==='entrada'?m.cantidad:'—'}</td>
+      <td class="num" style="color:var(--red);font-weight:600">${m.tipo==='salida'?m.cantidad:'—'}</td>
+      <td style="font-size:12px;color:var(--dim)">${m.proveedor||m.destino||'—'}</td>
+      <td style="font-size:12px;color:var(--dim);max-width:150px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${m.obs||'—'}</td>
+    </tr>`).join('') || '<tr><td colspan="11" style="text-align:center;color:var(--dim);padding:24px">Sin registros</td></tr>';
+}
+
+// ═══════════════════════════════════════════════════════
+// PRODUCTOS
+// ═══════════════════════════════════════════════════════
+function buildCatChips(){
+  const cats=['all',...new Set(DB.productos.map(p=>p.categoria))];
+  document.getElementById('cat-chips').innerHTML=cats.map(c=>`
+    <button class="cat-chip ${c==='all'?'on':''}" onclick="setCat('${c}',this)">${c==='all'?'Todos':c}</button>`).join('');
+}
+function setCat(c,el){
+  activeCat=c;
+  document.querySelectorAll('.cat-chip').forEach(x=>x.classList.remove('on'));
+  el.classList.add('on');
+  renderProductos();
+}
+function renderProductos(){
+  const q=(document.getElementById('prod-search')||{value:''}).value.toLowerCase();
+  let list=[...DB.productos].filter(p=>{
+    if(activeCat!=='all'&&p.categoria!==activeCat) return false;
+    if(q&&!p.nombre.toLowerCase().includes(q)&&!p.id.includes(q)) return false;
+    return true;
+  }).sort((a,b)=>{
+    const so={'danger':0,'warn':1,'ok-low':2,'ok':3};
+    return so[stockStatus(a)]-so[stockStatus(b)];
+  });
+  document.getElementById('t-prods').innerHTML=list.map(p=>`
+    <tr>
+      <td><span style="font-family:var(--mono);font-size:11px;color:var(--dim)">${p.id}</span></td>
+      <td style="font-weight:600">${p.nombre}</td>
+      <td>${p.udm}</td>
+      <td><span class="badge badge-neutral" style="font-size:10px;background:${CAT_COLORS[p.categoria]}22;color:${CAT_COLORS[p.categoria]}">${p.categoria}</span></td>
+      <td class="num" style="font-weight:700;color:${p.stock<=0?'var(--red)':p.stock<p.minimo?'var(--amber)':'var(--green)'}">${p.stock}</td>
+      <td class="num">${p.minimo}</td>
+      <td style="min-width:90px">${progBar(p)}</td>
+      <td>${statusBadge(p)}</td>
+      <td>
+        <div style="display:flex;gap:4px;flex-wrap:nowrap">
+          <button class="btn btn-ghost btn-sm" onclick="quickEntrada('${p.id}')" title="Entrada">⬇️</button>
+          <button class="btn btn-ghost btn-sm" onclick="quickSalida('${p.id}')" title="Salida">⬆️</button>
+          <button class="btn btn-ghost btn-sm" onclick="editarStockMin('${p.id}')" title="Editar mínimo">✏️</button>
+        </div>
+      </td>
+    </tr>`).join('');
+}
+function editarStockMin(id){
+  const p=getProd(id);
+  const nuevo=prompt(`Nuevo stock mínimo para "${p.nombre}" (actual: ${p.minimo}):`,p.minimo);
+  if(nuevo===null) return;
+  const n=parseInt(nuevo);
+  if(isNaN(n)||n<0){ showToast('Valor inválido','error'); return; }
+  p.minimo=n; saveDB(); renderProductos(); renderAlerts(); updateTopAlerts();
+  showToast(`Mínimo de ${p.nombre} actualizado a ${n}`);
+}
+
+// ═══════════════════════════════════════════════════════
+// NUEVO PRODUCTO
+// ═══════════════════════════════════════════════════════
+function agregarProducto(){
+  const nombre=document.getElementById('np-nombre').value.trim();
+  const cat=document.getElementById('np-cat').value;
+  const udm=document.getElementById('np-udm').value;
+  const alm=document.getElementById('np-alm').value.trim()||'Almacén';
+  const min=parseInt(document.getElementById('np-min').value)||0;
+  const ini=parseInt(document.getElementById('np-ini').value)||0;
+  if(!nombre||!cat){ showToast('Nombre y Categoría son obligatorios','error'); return; }
+  const id=nextCode(cat);
+  DB.productos.push({id,nombre,udm,categoria:cat,almacen:alm,minimo:min,stock:ini});
+  if(ini>0) DB.movimientos.push({id:DB.nextId++,fecha:new Date().toISOString().split('T')[0],tipo:'entrada',codigo:id,nombre,categoria:cat,udm,cantidad:ini,proveedor:'Inventario inicial',destino:'',obs:'Stock inicial'});
+  saveDB(); fillSelects(); buildCatChips(); renderProductos(); renderAlerts(); updateTopAlerts();
+  showToast(`Producto "${nombre}" agregado con código ${id}`);
+  ['np-nombre','np-min','np-ini'].forEach(x=>document.getElementById(x).value='');
+  nav('productos',document.querySelectorAll('.nav-btn')[8]);
+}
+
+// ═══════════════════════════════════════════════════════
+// CHARTS
+// ═══════════════════════════════════════════════════════
+const CO={
+  responsive:true,maintainAspectRatio:false,
+  plugins:{
+    legend:{labels:{color:'#6b7280',font:{size:10,family:'Inter'},boxWidth:10}},
+    tooltip:{backgroundColor:'#fff',borderColor:'#e2e5ed',borderWidth:1,titleColor:'#1a1d2e',bodyColor:'#6b7280',padding:10,boxShadow:'0 4px 12px rgba(0,0,0,.1)'}
+  },
+  scales:{
+    x:{grid:{display:false},ticks:{color:'#9ca3af',font:{size:10}}},
+    y:{grid:{color:'#f3f4f6'},ticks:{color:'#9ca3af',font:{size:10}}}
+  }
+};
+function mkChart(id,type,data,extra={}){
+  if(charts[id]) charts[id].destroy();
+  charts[id]=new Chart(document.getElementById(id),{type,data,options:{...CO,...extra,plugins:{...CO.plugins,...(extra.plugins||{})}}});
+}
+
+// ═══════════════════════════════════════════════════════
+// CHATBOT
+// ═══════════════════════════════════════════════════════
+function buildContext(){
+  const prods=DB.productos;
+  const criticos=prods.filter(p=>p.stock<=0);
+  const bajos=prods.filter(p=>p.stock>0&&p.stock<p.minimo);
+  const ok=prods.filter(p=>p.stock>=p.minimo);
+  const movs=DB.movimientos;
+  const totalEntradas=movs.filter(m=>m.tipo==='entrada').reduce((s,m)=>s+m.cantidad,0);
+  const totalSalidas=movs.filter(m=>m.tipo==='salida').reduce((s,m)=>s+m.cantidad,0);
+
+  return `Eres un asistente experto en gestión de inventarios de almacén. Tienes acceso completo al sistema de control de inventario. Responde siempre en español, de forma clara, precisa y útil. Usa negritas para datos importantes.
+
+RESUMEN DEL SISTEMA:
+- Total productos en catálogo: ${prods.length}
+- Productos con stock OK: ${ok.length}
+- Productos bajo stock mínimo: ${bajos.length}
+- Productos críticos (stock ≤ 0): ${criticos.length}
+- Total movimientos registrados: ${movs.length}
+- Total entradas (unidades): ${totalEntradas}
+- Total salidas (unidades): ${totalSalidas}
+
+PRODUCTOS CRÍTICOS (stock ≤ 0):
+${criticos.map(p=>`• ${p.nombre} [${p.id}]: stock=${p.stock} ${p.udm}, mínimo=${p.minimo} | ${p.categoria}`).join('\n')||'Ninguno'}
+
+PRODUCTOS BAJO STOCK:
+${bajos.map(p=>`• ${p.nombre} [${p.id}]: stock=${p.stock}, mínimo=${p.minimo}, faltan=${p.minimo-p.stock} | ${p.categoria}`).join('\n')||'Ninguno'}
+
+INVENTARIO COMPLETO (nombre | stock | mínimo | categoría):
+${prods.map(p=>`${p.nombre} [${p.id}]: ${p.stock}/${p.minimo} ${p.udm} | ${p.categoria}`).join('\n')}
+
+ÚLTIMOS 20 MOVIMIENTOS:
+${[...movs].sort((a,b)=>b.id-a.id).slice(0,20).map(m=>`${m.fecha} | ${m.tipo.toUpperCase()} | ${m.nombre} | ${m.cantidad} ${m.udm}`).join('\n')}
+
+CATEGORÍAS DISPONIBLES: ${[...new Set(prods.map(p=>p.categoria))].join(', ')}
+
+Cuando te pregunten qué necesita reposición, menciona primero los críticos (stock≤0) y luego los que están bajo mínimo. Si te preguntan de un producto específico, da su stock actual, mínimo y categoría. Puedes hacer recomendaciones de gestión basadas en los datos.`;
+}
+
+function initChat(){
+  addAIMsg('¡Hola! Soy tu asistente de inventario. Tengo acceso en tiempo real a todos tus productos, stocks y movimientos. Puedes preguntarme sobre cualquier producto, alertas de reposición o estadísticas del almacén.');
+}
+
+async function sendChat(){
+  const inp=document.getElementById('chat-in');
+  const msg=inp.value.trim();
+  if(!msg) return;
+  inp.value='';
+  addUserMsg(msg);
+  chatHistory.push({role:'user',content:msg});
+  document.getElementById('send-btn').disabled=true;
+
+  if(!apiKey){
+    // Local fallback
+    const resp=localChatResponse(msg.toLowerCase());
+    setTimeout(()=>{ addAIMsg(resp); document.getElementById('send-btn').disabled=false; },400);
+    return;
+  }
+
+  const tid=addTyping();
+  try{
+    const res=await fetch('https://api.anthropic.com/v1/messages',{
+      method:'POST',
+      headers:{'Content-Type':'application/json','x-api-key':apiKey,'anthropic-version':'2023-06-01','anthropic-dangerous-direct-browser-access':'true'},
+      body:JSON.stringify({model:'claude-sonnet-4-20250514',max_tokens:800,system:buildContext(),messages:chatHistory})
+    });
+    const data=await res.json();
+    removeTyping(tid);
+    if(data.content?.[0]?.text){
+      const reply=data.content[0].text;
+      chatHistory.push({role:'assistant',content:reply});
+      addAIMsg(reply);
+    } else addAIMsg('Error al procesar la respuesta. Intenta de nuevo.');
+  } catch(e){
+    removeTyping(tid);
+    addAIMsg('Error de conexión. Revisa tu API key o conexión a internet.');
+  }
+  document.getElementById('send-btn').disabled=false;
+}
+
+function localChatResponse(q){
+  const criticos=DB.productos.filter(p=>p.stock<=0);
+  const bajos=DB.productos.filter(p=>p.stock>0&&p.stock<p.minimo);
+  if(q.includes('reposición')||q.includes('solicitar')||q.includes('crítico')||q.includes('falta')){
+    let r='**Productos que necesitan reposición:**\n\n';
+    if(criticos.length) r+='🚨 **Críticos (sin stock):**\n'+criticos.map(p=>`• ${p.nombre}: ${p.stock} (mínimo: ${p.minimo})`).join('\n')+'\n\n';
+    if(bajos.length) r+='⚠️ **Bajo stock:**\n'+bajos.map(p=>`• ${p.nombre}: ${p.stock}/${p.minimo}`).join('\n');
+    return r||'✅ Todo el inventario está en niveles correctos.';
+  }
+  if(q.includes('resumen')||q.includes('inventario')){
+    return `**Resumen del Inventario:**\n\n• Total productos: ${DB.productos.length}\n• Stock OK: ${DB.productos.filter(p=>p.stock>=p.minimo).length}\n• Bajo mínimo: ${bajos.length}\n• Críticos: ${criticos.length}\n• Movimientos: ${DB.movimientos.length}`;
+  }
+  // Search specific product
+  const found=DB.productos.find(p=>q.includes(p.nombre.toLowerCase()));
+  if(found) return `**${found.nombre}:**\n• Stock actual: ${found.stock} ${found.udm}\n• Stock mínimo: ${found.minimo} ${found.udm}\n• Categoría: ${found.categoria}\n• Estado: ${found.stock<=0?'🚨 Crítico':found.stock<found.minimo?'⚠️ Bajo stock':'✅ OK'}`;
+  return 'Para obtener respuestas más detalladas con IA, configura tu API key de Anthropic en la pantalla de inicio. Por ahora puedo responder preguntas básicas sobre el inventario.';
+}
+
+function chatKey(e){ if(e.key==='Enter'&&!e.shiftKey){ e.preventDefault(); sendChat(); } }
+function sendSug(btn){ document.getElementById('chat-in').value=btn.textContent; sendChat(); }
+function addUserMsg(t){ appendMsg('user',t); }
+function addAIMsg(t){
+  const html=t.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;')
+    .replace(/\*\*(.+?)\*\*/g,'<strong>$1</strong>').replace(/\n/g,'<br>');
+  const msgs=document.getElementById('chat-msgs');
+  msgs.insertAdjacentHTML('beforeend',`<div class="msg ai"><div class="m-av">AI</div><div class="bubble">${html}</div></div>`);
+  msgs.scrollTop=msgs.scrollHeight;
+}
+function appendMsg(who,t){
+  const msgs=document.getElementById('chat-msgs');
+  const safe=t.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
+  msgs.insertAdjacentHTML('beforeend',`<div class="msg ${who}"><div class="m-av">${who==='user'?'Tú':'AI'}</div><div class="bubble">${safe}</div></div>`);
+  msgs.scrollTop=msgs.scrollHeight;
+}
+function addTyping(){
+  const msgs=document.getElementById('chat-msgs');
+  const id='t'+Date.now();
+  msgs.insertAdjacentHTML('beforeend',`<div class="msg ai" id="${id}"><div class="m-av">AI</div><div class="bubble"><div class="typing-dots"><span></span><span></span><span></span></div></div></div>`);
+  msgs.scrollTop=msgs.scrollHeight;
+  return id;
+}
+function removeTyping(id){ const el=document.getElementById(id); if(el) el.remove(); }
+</script>
+</body>
+</html>

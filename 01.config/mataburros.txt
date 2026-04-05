@@ -1,0 +1,15 @@
+cd /home/arti/Proyectos_DTAR/BusinessOS_Claude/01.config/Claude-free
+
+claude --settings settings_free.json
+claude --settings settings.json
+
+
+{
+  "env": {
+    "ANTHROPIC_BASE_URL": "https://openrouter.ai/api",
+  //  "ANTHROPIC_AUTH_TOKEN": "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",
+    "ANTHROPIC_AUTH_TOKEN": "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",
+        "ANTHROPIC_API_KEY": "",
+    "ANTHROPIC_MODEL": "openrouter/free"
+  }
+}exit

@@ -1,0 +1,1172 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Contabilidad 2026 — Dashboard</title>
+<link href="https://fonts.googleapis.com/css2?family=Space+Mono:wght@400;700&family=Syne:wght@400;600;800&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --bg: #0a0a0f;
+    --surface: #111118;
+    --surface2: #1a1a24;
+    --border: #2a2a3a;
+    --accent: #00e5a0;
+    --accent2: #ff6b35;
+    --accent3: #7b61ff;
+    --accent4: #ffd60a;
+    --text: #e8e8f0;
+    --text-dim: #7070a0;
+    --red: #ff4757;
+    --green: #00e5a0;
+    --font-display: 'Syne', sans-serif;
+    --font-mono: 'Space Mono', monospace;
+  }
+
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+
+  body {
+    background: var(--bg);
+    color: var(--text);
+    font-family: var(--font-display);
+    min-height: 100vh;
+    overflow-x: hidden;
+  }
+
+  /* Grain overlay */
+  body::before {
+    content: '';
+    position: fixed;
+    inset: 0;
+    background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noise'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noise)' opacity='0.04'/%3E%3C/svg%3E");
+    pointer-events: none;
+    z-index: 1000;
+    opacity: 0.4;
+  }
+
+  /* Header */
+  header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 28px 40px;
+    border-bottom: 1px solid var(--border);
+    background: var(--surface);
+    position: sticky;
+    top: 0;
+    z-index: 100;
+  }
+
+  .logo {
+    display: flex;
+    align-items: center;
+    gap: 14px;
+  }
+
+  .logo-mark {
+    width: 36px;
+    height: 36px;
+    background: var(--accent);
+    clip-path: polygon(50% 0%, 100% 25%, 100% 75%, 50% 100%, 0% 75%, 0% 25%);
+    display: grid;
+    place-items: center;
+    flex-shrink: 0;
+  }
+
+  .logo-text {
+    font-size: 18px;
+    font-weight: 800;
+    letter-spacing: -0.02em;
+    color: var(--text);
+  }
+
+  .logo-text span {
+    color: var(--accent);
+  }
+
+  .header-meta {
+    font-family: var(--font-mono);
+    font-size: 11px;
+    color: var(--text-dim);
+    text-align: right;
+    line-height: 1.6;
+  }
+
+  .badge {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    padding: 4px 10px;
+    border-radius: 20px;
+    font-family: var(--font-mono);
+    font-size: 10px;
+    font-weight: 700;
+    letter-spacing: 0.05em;
+  }
+
+  .badge-green { background: rgba(0,229,160,0.15); color: var(--accent); border: 1px solid rgba(0,229,160,0.3); }
+  .badge-red { background: rgba(255,71,87,0.15); color: var(--red); border: 1px solid rgba(255,71,87,0.3); }
+  .badge-amber { background: rgba(255,214,10,0.15); color: var(--accent4); border: 1px solid rgba(255,214,10,0.3); }
+
+  .dot { width: 6px; height: 6px; border-radius: 50%; background: currentColor; animation: pulse 2s infinite; }
+  @keyframes pulse { 0%,100%{ opacity:1; } 50%{ opacity:0.4; } }
+
+  /* Navigation tabs */
+  nav {
+    display: flex;
+    gap: 4px;
+    padding: 16px 40px;
+    border-bottom: 1px solid var(--border);
+    background: var(--surface);
+    overflow-x: auto;
+  }
+
+  nav button {
+    padding: 8px 20px;
+    border: 1px solid transparent;
+    border-radius: 6px;
+    font-family: var(--font-display);
+    font-weight: 600;
+    font-size: 13px;
+    cursor: pointer;
+    background: transparent;
+    color: var(--text-dim);
+    white-space: nowrap;
+    transition: all 0.2s;
+  }
+
+  nav button:hover { color: var(--text); background: var(--surface2); }
+  nav button.active {
+    background: var(--accent);
+    color: #000;
+    border-color: var(--accent);
+  }
+
+  /* Main layout */
+  main { padding: 32px 40px; max-width: 1600px; margin: 0 auto; }
+
+  /* KPI row */
+  .kpi-grid {
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    gap: 16px;
+    margin-bottom: 32px;
+  }
+
+  @media(max-width: 900px) { .kpi-grid { grid-template-columns: repeat(2,1fr); } }
+  @media(max-width: 500px) { .kpi-grid { grid-template-columns: 1fr; } main { padding: 20px 16px; } nav { padding: 12px 16px; } header { padding: 20px 16px; } }
+
+  .kpi-card {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 12px;
+    padding: 24px;
+    position: relative;
+    overflow: hidden;
+    transition: border-color 0.2s, transform 0.2s;
+  }
+
+  .kpi-card:hover { border-color: var(--accent3); transform: translateY(-2px); }
+
+  .kpi-card::before {
+    content: '';
+    position: absolute;
+    top: 0; left: 0; right: 0;
+    height: 2px;
+    background: var(--card-accent, var(--accent));
+  }
+
+  .kpi-label {
+    font-family: var(--font-mono);
+    font-size: 10px;
+    color: var(--text-dim);
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    margin-bottom: 10px;
+  }
+
+  .kpi-value {
+    font-size: 28px;
+    font-weight: 800;
+    letter-spacing: -0.03em;
+    color: var(--text);
+    line-height: 1;
+  }
+
+  .kpi-sub {
+    margin-top: 8px;
+    font-family: var(--font-mono);
+    font-size: 11px;
+    color: var(--text-dim);
+  }
+
+  .kpi-icon {
+    position: absolute;
+    top: 20px;
+    right: 20px;
+    font-size: 24px;
+    opacity: 0.15;
+  }
+
+  /* Section header */
+  .section-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    margin-bottom: 20px;
+  }
+
+  .section-title {
+    font-size: 16px;
+    font-weight: 800;
+    letter-spacing: -0.01em;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+  }
+
+  .section-title::before {
+    content: '';
+    width: 3px;
+    height: 18px;
+    background: var(--accent);
+    border-radius: 2px;
+    flex-shrink: 0;
+  }
+
+  /* Two-col layout */
+  .two-col {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 20px;
+    margin-bottom: 24px;
+  }
+
+  @media(max-width: 800px) { .two-col { grid-template-columns: 1fr; } }
+
+  .card {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 12px;
+    padding: 24px;
+  }
+
+  /* Chart area */
+  .chart-area {
+    position: relative;
+    height: 220px;
+    margin-top: 16px;
+  }
+
+  canvas { width: 100% !important; height: 100% !important; }
+
+  /* Table */
+  .data-table {
+    width: 100%;
+    border-collapse: collapse;
+    font-size: 13px;
+  }
+
+  .data-table th {
+    font-family: var(--font-mono);
+    font-size: 10px;
+    color: var(--text-dim);
+    letter-spacing: 0.06em;
+    text-transform: uppercase;
+    text-align: left;
+    padding: 10px 12px;
+    border-bottom: 1px solid var(--border);
+    white-space: nowrap;
+  }
+
+  .data-table td {
+    padding: 11px 12px;
+    border-bottom: 1px solid rgba(42,42,58,0.5);
+    color: var(--text);
+    font-size: 13px;
+    transition: background 0.15s;
+  }
+
+  .data-table tr:hover td { background: var(--surface2); }
+  .data-table tr:last-child td { border-bottom: none; }
+
+  .num { font-family: var(--font-mono); font-size: 12px; }
+  .num.pos { color: var(--green); }
+  .num.neg { color: var(--red); }
+
+  /* Progress bar */
+  .progress-wrap { margin-top: 4px; }
+  .progress-bar {
+    height: 4px;
+    background: var(--border);
+    border-radius: 4px;
+    overflow: hidden;
+  }
+  .progress-fill {
+    height: 100%;
+    border-radius: 4px;
+    background: var(--accent);
+    transition: width 0.8s cubic-bezier(0.4,0,0.2,1);
+  }
+
+  /* Filter row */
+  .filter-row {
+    display: flex;
+    gap: 10px;
+    margin-bottom: 20px;
+    flex-wrap: wrap;
+  }
+
+  select, input[type=text] {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    padding: 8px 14px;
+    color: var(--text);
+    font-family: var(--font-display);
+    font-size: 13px;
+    outline: none;
+    cursor: pointer;
+    transition: border-color 0.2s;
+  }
+
+  select:focus, input[type=text]:focus { border-color: var(--accent3); }
+
+  /* Tab pages */
+  .tab-page { display: none; }
+  .tab-page.active { display: block; }
+
+  /* Scroll table */
+  .table-scroll { overflow-x: auto; }
+
+  /* Sparkline inline */
+  .spark { display: inline-block; vertical-align: middle; }
+
+  /* Tooltip */
+  .tooltip {
+    position: fixed;
+    background: var(--surface2);
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    padding: 10px 14px;
+    font-size: 12px;
+    pointer-events: none;
+    z-index: 9999;
+    display: none;
+    backdrop-filter: blur(10px);
+  }
+
+  /* Day comparison grid */
+  .day-grid {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 12px;
+    margin-bottom: 24px;
+  }
+
+  @media(max-width: 700px) { .day-grid { grid-template-columns: repeat(2,1fr); } }
+
+  .day-card {
+    background: var(--surface2);
+    border: 1px solid var(--border);
+    border-radius: 10px;
+    padding: 16px;
+    cursor: pointer;
+    transition: all 0.2s;
+    position: relative;
+  }
+
+  .day-card:hover, .day-card.selected {
+    border-color: var(--accent);
+    background: rgba(0,229,160,0.05);
+  }
+
+  .day-card.selected::after {
+    content: '✓';
+    position: absolute;
+    top: 10px; right: 10px;
+    color: var(--accent);
+    font-weight: 700;
+  }
+
+  .day-card-date {
+    font-family: var(--font-mono);
+    font-size: 10px;
+    color: var(--text-dim);
+    margin-bottom: 6px;
+  }
+
+  .day-card-venta {
+    font-size: 18px;
+    font-weight: 800;
+    letter-spacing: -0.02em;
+  }
+
+  .day-card-venta.pos { color: var(--green); }
+  .day-card-venta.neg { color: var(--red); }
+
+  /* Animated number counter */
+  .counter { transition: all 0.3s; }
+
+  /* Full-width chart card */
+  .chart-card {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 12px;
+    padding: 24px;
+    margin-bottom: 24px;
+  }
+
+  .chart-card .chart-area { height: 260px; }
+
+  /* Info row */
+  .info-row {
+    display: flex;
+    gap: 32px;
+    margin-top: 16px;
+    flex-wrap: wrap;
+  }
+
+  .info-item {
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+  }
+
+  .info-label {
+    font-family: var(--font-mono);
+    font-size: 10px;
+    color: var(--text-dim);
+    text-transform: uppercase;
+    letter-spacing: 0.06em;
+  }
+
+  .info-value {
+    font-size: 16px;
+    font-weight: 700;
+  }
+
+  /* Empty state */
+  .empty {
+    text-align: center;
+    padding: 40px;
+    color: var(--text-dim);
+    font-family: var(--font-mono);
+    font-size: 13px;
+  }
+
+  /* Scrollbar */
+  ::-webkit-scrollbar { width: 6px; height: 6px; }
+  ::-webkit-scrollbar-track { background: transparent; }
+  ::-webkit-scrollbar-thumb { background: var(--border); border-radius: 3px; }
+  ::-webkit-scrollbar-thumb:hover { background: var(--accent3); }
+</style>
+</head>
+<body>
+
+<header>
+  <div class="logo">
+    <div class="logo-mark"></div>
+    <div>
+      <div class="logo-text">Conta<span>2026</span></div>
+    </div>
+  </div>
+  <div style="display:flex; align-items:center; gap:16px; flex-wrap:wrap;">
+    <span class="badge badge-green"><span class="dot"></span> USD: 515 CUP</span>
+    <span class="badge badge-amber"><span class="dot"></span> MLC: 400 CUP</span>
+    <div class="header-meta">
+      Última hoja: 2-4-26<br>
+      6 períodos · 36 productos
+    </div>
+  </div>
+</header>
+
+<nav>
+  <button class="active" onclick="switchTab('resumen')">📊 Resumen</button>
+  <button onclick="switchTab('diario')">📅 Ventas Diarias</button>
+  <button onclick="switchTab('productos')">🏷️ Catálogo Productos</button>
+  <button onclick="switchTab('rentabilidad')">💹 Rentabilidad</button>
+  <button onclick="switchTab('salarios')">👤 Personal</button>
+</nav>
+
+<main>
+
+<!-- ============ TAB: RESUMEN ============ -->
+<div class="tab-page active" id="tab-resumen">
+
+  <div class="kpi-grid">
+    <div class="kpi-card" style="--card-accent: var(--accent)">
+      <div class="kpi-icon">💰</div>
+      <div class="kpi-label">Venta Total Acumulada</div>
+      <div class="kpi-value" id="kpi-venta">678,400</div>
+      <div class="kpi-sub">CUP · todos los períodos</div>
+    </div>
+    <div class="kpi-card" style="--card-accent: var(--accent2)">
+      <div class="kpi-icon">📦</div>
+      <div class="kpi-label">Inversión Total</div>
+      <div class="kpi-value" id="kpi-inv">352,786</div>
+      <div class="kpi-sub">CUP · costo de mercancía</div>
+    </div>
+    <div class="kpi-card" style="--card-accent: var(--accent3)">
+      <div class="kpi-icon">📈</div>
+      <div class="kpi-label">Ganancia Neta Total</div>
+      <div class="kpi-value" id="kpi-neta" style="color: var(--green)">228,328</div>
+      <div class="kpi-sub">CUP · tras 20% s/ventas</div>
+    </div>
+    <div class="kpi-card" style="--card-accent: var(--accent4)">
+      <div class="kpi-icon">🎯</div>
+      <div class="kpi-label">Margen Promedio Neto</div>
+      <div class="kpi-value" id="kpi-margen" style="color: var(--accent4)">33.6%</div>
+      <div class="kpi-sub">Catálogo completo</div>
+    </div>
+  </div>
+
+  <!-- Day cards -->
+  <div class="section-header">
+    <div class="section-title">Rendimiento por Período</div>
+  </div>
+
+  <div class="day-grid" id="day-cards"></div>
+
+  <!-- Two charts -->
+  <div class="two-col">
+    <div class="card">
+      <div class="section-header">
+        <div class="section-title" style="font-size:14px;">Ventas vs Inversión</div>
+      </div>
+      <div class="chart-area"><canvas id="chartVentaInv"></canvas></div>
+    </div>
+    <div class="card">
+      <div class="section-header">
+        <div class="section-title" style="font-size:14px;">Ganancia Neta por Día</div>
+      </div>
+      <div class="chart-area"><canvas id="chartGanancia"></canvas></div>
+    </div>
+  </div>
+
+  <!-- Products sold summary -->
+  <div class="chart-card">
+    <div class="section-header">
+      <div class="section-title">Unidades Vendidas por Producto (acumulado)</div>
+    </div>
+    <div class="chart-area" style="height:240px;"><canvas id="chartUnidades"></canvas></div>
+  </div>
+
+</div>
+
+<!-- ============ TAB: DIARIO ============ -->
+<div class="tab-page" id="tab-diario">
+  <div class="filter-row">
+    <select id="filterDia" onchange="renderDailyTable()">
+      <option value="">Todos los períodos</option>
+    </select>
+  </div>
+
+  <div class="card">
+    <div class="section-title" style="margin-bottom:20px;">Ventas Diarias Detalladas</div>
+    <div class="table-scroll">
+      <table class="data-table" id="dailyTable">
+        <thead>
+          <tr>
+            <th>Fecha</th>
+            <th>Venta Total</th>
+            <th>Inversión</th>
+            <th>Ganancia</th>
+            <th>Ganancia Neta</th>
+            <th>Margen %</th>
+            <th>Estado</th>
+          </tr>
+        </thead>
+        <tbody id="dailyTableBody"></tbody>
+      </table>
+    </div>
+  </div>
+
+  <div style="margin-top:20px;">
+    <div class="card">
+      <div class="section-title" style="margin-bottom:20px;">Unidades vendidas por período</div>
+      <div class="table-scroll">
+        <table class="data-table" id="unitsTable">
+          <thead id="unitsTableHead"></thead>
+          <tbody id="unitsTableBody"></tbody>
+        </table>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ============ TAB: PRODUCTOS ============ -->
+<div class="tab-page" id="tab-productos">
+  <div class="filter-row">
+    <input type="text" id="searchProd" placeholder="🔍 Buscar producto..." oninput="renderProductTable()">
+    <select id="sortProd" onchange="renderProductTable()">
+      <option value="nombre">Ordenar por Nombre</option>
+      <option value="precio_venta">Precio Venta ↓</option>
+      <option value="ganancia_neta">Ganancia Neta ↓</option>
+      <option value="margen_pct">Margen % ↓</option>
+      <option value="costo">Costo ↓</option>
+    </select>
+  </div>
+
+  <div class="card">
+    <div class="table-scroll">
+      <table class="data-table">
+        <thead>
+          <tr>
+            <th>#</th>
+            <th>Producto</th>
+            <th>Costo Base</th>
+            <th>Inversión Total</th>
+            <th>Precio Venta</th>
+            <th>Ganancia Bruta</th>
+            <th>Ganancia Neta</th>
+            <th>Margen %</th>
+          </tr>
+        </thead>
+        <tbody id="productTableBody"></tbody>
+      </table>
+    </div>
+  </div>
+</div>
+
+<!-- ============ TAB: RENTABILIDAD ============ -->
+<div class="tab-page" id="tab-rentabilidad">
+
+  <div class="section-header">
+    <div class="section-title">Top 10 Productos por Margen Neto</div>
+  </div>
+
+  <div class="card" style="margin-bottom:24px;">
+    <div class="chart-area" style="height:320px;"><canvas id="chartMargen"></canvas></div>
+  </div>
+
+  <div class="two-col">
+    <div class="card">
+      <div class="section-title" style="margin-bottom:16px;">🏆 Mayor Margen</div>
+      <div id="topMargen"></div>
+    </div>
+    <div class="card">
+      <div class="section-title" style="margin-bottom:16px;">⚠️ Menor Margen</div>
+      <div id="bottomMargen"></div>
+    </div>
+  </div>
+
+  <div class="chart-card" style="margin-top:24px;">
+    <div class="section-title" style="margin-bottom:20px;">Precio Venta vs Ganancia Neta — Comparativa</div>
+    <div class="chart-area" style="height:280px;"><canvas id="chartScatter"></canvas></div>
+  </div>
+</div>
+
+<!-- ============ TAB: PERSONAL ============ -->
+<div class="tab-page" id="tab-salarios">
+
+  <div class="kpi-grid" style="grid-template-columns: repeat(2,1fr); max-width:700px;">
+    <div class="kpi-card" style="--card-accent: var(--accent3)">
+      <div class="kpi-label">Salario Total Danay</div>
+      <div class="kpi-value" id="salDanay" style="color:var(--accent3)">0</div>
+      <div class="kpi-sub">CUP acumulado</div>
+    </div>
+    <div class="kpi-card" style="--card-accent: var(--accent2)">
+      <div class="kpi-label">Salario Total Dayan</div>
+      <div class="kpi-value" id="salDayan" style="color:var(--accent2)">0</div>
+      <div class="kpi-sub">CUP acumulado</div>
+    </div>
+  </div>
+
+  <div class="card" style="margin-top:24px;">
+    <div class="section-title" style="margin-bottom:20px;">Salarios por Período</div>
+    <div class="chart-area" style="height:240px;"><canvas id="chartSalarios"></canvas></div>
+  </div>
+
+  <div class="card" style="margin-top:20px;">
+    <div class="table-scroll">
+      <table class="data-table">
+        <thead>
+          <tr><th>Período</th><th>Salario Danay</th><th>Salario Dayan</th><th>Total</th><th>% sobre Ganancia Neta</th></tr>
+        </thead>
+        <tbody id="salTableBody"></tbody>
+      </table>
+    </div>
+  </div>
+</div>
+
+</main>
+
+<div class="tooltip" id="tooltip"></div>
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.min.js"></script>
+<script>
+// ============================================================
+// DATA — Extracted from Contabilidad_2026.xlsx
+// ============================================================
+
+const TASAS = { USD: 515, MLC: 400 };
+
+const DAILY = [
+  { fecha: '23-3-26', label: 'Lun 23 Mar', venta: 0, inversion: 0, ganancia: -6409, ganancia_neta: -5127.2,
+    cantidades: { 'P.Blanco':0,'P.Niño':0,'P.Poliespx-Bla':0,'P.Poliespx-N':0,'P.Poliespx-Be':0,'P.Color c/ vinil sublim':0,'P.Color c/ vinil textil':0,'Jarra de Crsital':0,'Losa 10':0,'Losa 20':0,'Losa 15':0,'Jarra 11oz':0,'Gorra':0,'Jaba d/ Tela':0,'Bolso Grande':0,'Llavero':0,'Jarra Mágica':0,'Mauspad':0,'Bot.Aluminio':0,'Enguatadas':0,'Portacel':0,'Tazas d/ Café':0,'Pomos 750ml':0,'J.Térmicas':0,'Pom c/ Absorv':0,'Delantal Vinil/Sublim':0,'Delantal Vinil/textil':0,'Monedero':0,'Cojín':0,'PoPSocket':0,'Fotorroca':0 },
+    salDanay: -640.9, salDayan: -640.9 },
+  { fecha: '29-3-26', label: 'Dom 29 Mar', venta: 0, inversion: 0, ganancia: -6409, ganancia_neta: -5127.2,
+    cantidades: { 'P.Blanco':0,'P.Niño':0,'P.Poliespx-Bla':0,'P.Poliespx-N':0,'P.Poliespx-Be':0,'P.Color c/ vinil sublim':0,'P.Color c/ vinil textil':0,'Jarra de Crsital':0,'Losa 10':0,'Losa 20':0,'Losa 15':0,'Jarra 11oz':0,'Gorra':0,'Jaba d/ Tela':0,'Bolso Grande':0,'Llavero':0,'Jarra Mágica':0,'Mauspad':0,'Bot.Aluminio':0,'Enguatadas':0,'Portacel':0,'Tazas d/ Café':0,'Pomos 750ml':0,'J.Térmicas':0,'Pom c/ Absorv':0,'Delantal Vinil/Sublim':0,'Delantal Vinil/textil':0,'Monedero':0,'Cojín':0,'PoPSocket':0,'Fotorroca':0 },
+    salDanay: -640.9, salDayan: -640.9 },
+  { fecha: '30-3-26', label: 'Lun 30 Mar', venta: 198400, inversion: 105373.4, ganancia: 86617.6, ganancia_neta: 69294.08,
+    cantidades: { 'P.Blanco':20,'P.Niño':60,'P.Poliespx-Bla':0,'P.Poliespx-N':12,'P.Poliespx-Be':0,'P.Color c/ vinil sublim':8,'P.Color c/ vinil textil':0,'Jarra de Crsital':0,'Losa 10':0,'Losa 20':0,'Losa 15':0,'Jarra 11oz':0,'Gorra':0,'Jaba d/ Tela':0,'Bolso Grande':0,'Llavero':0,'Jarra Mágica':0,'Mauspad':0,'Bot.Aluminio':0,'Enguatadas':0,'Portacel':0,'Tazas d/ Café':0,'Pomos 750ml':0,'J.Térmicas':0,'Pom c/ Absorv':0,'Delantal Vinil/Sublim':0,'Delantal Vinil/textil':0,'Monedero':0,'Cojín':0,'PoPSocket':0,'Fotorroca':0 },
+    salDanay: 8661.76, salDayan: 8661.76 },
+  { fecha: '31-3-26', label: 'Mar 31 Mar', venta: 280000, inversion: 141237.5, ganancia: 132353.5, ganancia_neta: 105882.8,
+    cantidades: { 'P.Blanco':50,'P.Niño':100,'P.Poliespx-Bla':0,'P.Poliespx-N':0,'P.Poliespx-Be':0,'P.Color c/ vinil sublim':0,'P.Color c/ vinil textil':0,'Jarra de Crsital':0,'Losa 10':0,'Losa 20':0,'Losa 15':0,'Jarra 11oz':0,'Gorra':0,'Jaba d/ Tela':0,'Bolso Grande':0,'Llavero':0,'Jarra Mágica':0,'Mauspad':0,'Bot.Aluminio':0,'Enguatadas':0,'Portacel':0,'Tazas d/ Café':0,'Pomos 750ml':0,'J.Térmicas':0,'Pom c/ Absorv':0,'Delantal Vinil/Sublim':0,'Delantal Vinil/textil':0,'Monedero':0,'Cojín':0,'PoPSocket':0,'Fotorroca':0 },
+    salDanay: 13235.35, salDayan: 13235.35 },
+  { fecha: '1-4-26', label: 'Mié 1 Abr', venta: 100000, inversion: 53087.5, ganancia: 40503.5, ganancia_neta: 32402.8,
+    cantidades: { 'P.Blanco':50,'P.Niño':0,'P.Poliespx-Bla':0,'P.Poliespx-N':0,'P.Poliespx-Be':0,'P.Color c/ vinil sublim':0,'P.Color c/ vinil textil':0,'Jarra de Crsital':0,'Losa 10':0,'Losa 20':0,'Losa 15':0,'Jarra 11oz':0,'Gorra':0,'Jaba d/ Tela':0,'Bolso Grande':0,'Llavero':0,'Jarra Mágica':0,'Mauspad':0,'Bot.Aluminio':0,'Enguatadas':0,'Portacel':0,'Tazas d/ Café':0,'Pomos 750ml':0,'J.Térmicas':0,'Pom c/ Absorv':0,'Delantal Vinil/Sublim':0,'Delantal Vinil/textil':0,'Monedero':0,'Cojín':0,'PoPSocket':0,'Fotorroca':0 },
+    salDanay: 4050.35, salDayan: 4050.35 },
+  { fecha: '2-4-26', label: 'Jue 2 Abr', venta: 100000, inversion: 53087.5, ganancia: 40503.5, ganancia_neta: 32402.8,
+    cantidades: { 'P.Blanco':50,'P.Niño':0,'P.Poliespx-Bla':0,'P.Poliespx-N':0,'P.Poliespx-Be':0,'P.Color c/ vinil sublim':0,'P.Color c/ vinil textil':0,'Jarra de Crsital':0,'Losa 10':0,'Losa 20':0,'Losa 15':0,'Jarra 11oz':0,'Gorra':0,'Jaba d/ Tela':0,'Bolso Grande':0,'Llavero':0,'Jarra Mágica':0,'Mauspad':0,'Bot.Aluminio':0,'Enguatadas':0,'Portacel':0,'Tazas d/ Café':0,'Pomos 750ml':0,'J.Térmicas':0,'Pom c/ Absorv':0,'Delantal Vinil/Sublim':0,'Delantal Vinil/textil':0,'Monedero':0,'Cojín':0,'PoPSocket':0,'Fotorroca':0 },
+    salDanay: 4050.35, salDayan: 4050.35 }
+];
+
+const PRODUCTS = [
+  { nombre:'Pulóver Blanco Dri-Fit', costo:952.75, inversion:1061.75, precio_venta:2000, ganancia:938.25, ganancia_neta:750.6, margen_pct:37.5 },
+  { nombre:'Pulóver blanco niño(1-10)', costo:772.5, inversion:881.5, precio_venta:1800, ganancia:918.5, ganancia_neta:734.8, margen_pct:40.8 },
+  { nombre:'Jarras de Cristal 16oz', costo:1802.5, inversion:1903.25, precio_venta:3000, ganancia:1096.75, ganancia_neta:877.4, margen_pct:29.2 },
+  { nombre:'Losa 20x20 con soporte', costo:750, inversion:901.5, precio_venta:1600, ganancia:698.5, ganancia_neta:558.8, margen_pct:34.9 },
+  { nombre:'Losa 15x15 con soporte', costo:650, inversion:750.75, precio_venta:1300, ganancia:549.25, ganancia_neta:439.4, margen_pct:33.8 },
+  { nombre:'Losa 10x10 con soporte', costo:200, inversion:275.375, precio_venta:1200, ganancia:924.625, ganancia_neta:739.7, margen_pct:61.6 },
+  { nombre:'Jarra 11oz', costo:772.5, inversion:856.67, precio_venta:1300, ganancia:443.33, ganancia_neta:354.67, margen_pct:27.3 },
+  { nombre:'Gorra', costo:1030, inversion:1093.15, precio_venta:2000, ganancia:906.85, ganancia_neta:725.48, margen_pct:36.3 },
+  { nombre:'Jaba de Tela', costo:450, inversion:556, precio_venta:1200, ganancia:644, ganancia_neta:515.2, margen_pct:42.9 },
+  { nombre:'Llaveros de Acrílico c/ herraje', costo:154.5, inversion:182.65, precio_venta:400, ganancia:217.35, ganancia_neta:173.88, margen_pct:43.5 },
+  { nombre:'Mauspad', costo:200, inversion:357.5, precio_venta:1000, ganancia:642.5, ganancia_neta:514, margen_pct:51.4 },
+  { nombre:'Botellas de Aluminio', costo:1802.5, inversion:1894.67, precio_venta:2500, ganancia:605.33, ganancia_neta:484.27, margen_pct:19.4 },
+  { nombre:'Enguatadas', costo:1287.5, inversion:1393.5, precio_venta:2200, ganancia:806.5, ganancia_neta:645.2, margen_pct:29.3 },
+  { nombre:'Portacelular', costo:500, inversion:603.75, precio_venta:1200, ganancia:596.25, ganancia_neta:477, margen_pct:39.8 },
+  { nombre:'Pomos de Aluminio', costo:2060, inversion:2160.75, precio_venta:2800, ganancia:639.25, ganancia_neta:511.4, margen_pct:18.3 },
+  { nombre:'Tazas de Café', costo:600, inversion:663.15, precio_venta:1500, ganancia:836.85, ganancia_neta:669.48, margen_pct:44.6 },
+  { nombre:'Pomos Deportivos 750ml', costo:2575, inversion:2676.5, precio_venta:3500, ganancia:823.5, ganancia_neta:658.8, margen_pct:18.8 },
+  { nombre:'Jarra Mágica', costo:550, inversion:634.17, precio_venta:1300, ganancia:665.83, ganancia_neta:532.67, margen_pct:41.0 },
+  { nombre:'Jarras Térmicas', costo:2575, inversion:2676.5, precio_venta:3200, ganancia:523.5, ganancia_neta:432.67, margen_pct:13.5 },
+  { nombre:'Pulóver Blanco Poliespandex', costo:1390.5, inversion:1449.5, precio_venta:2400, ganancia:950.5, ganancia_neta:722.8, margen_pct:30.1 },
+  { nombre:'Delantal Negro c/ vinil textil', costo:618, inversion:728, precio_venta:2000, ganancia:1272, ganancia_neta:777.2, margen_pct:38.9 },
+  { nombre:'Propio Vinil logo', costo:0, inversion:268.75, precio_venta:500, ganancia:231.25, ganancia_neta:231.25, margen_pct:46.2 },
+  { nombre:'Propio Vinil A4', costo:0, inversion:477.5, precio_venta:900, ganancia:422.5, ganancia_neta:422.5, margen_pct:46.9 },
+  { nombre:'Propio Sublimación', costo:0, inversion:167.2, precio_venta:400, ganancia:232.8, ganancia_neta:232.8, margen_pct:58.2 },
+  { nombre:'Monederos', costo:206, inversion:267, precio_venta:700, ganancia:433, ganancia_neta:228, margen_pct:32.6 },
+  { nombre:'Fotorrocas', costo:1545, inversion:1620, precio_venta:2300, ganancia:680, ganancia_neta:478, margen_pct:20.8 },
+  { nombre:'Cojines', costo:1250, inversion:1367, precio_venta:2100, ganancia:733, ganancia_neta:595.2, margen_pct:28.3 },
+  { nombre:'Pulóver Colores c/ Vinil Textil', costo:952.75, inversion:1061.75, precio_venta:2200, ganancia:1138.25, ganancia_neta:669.4, margen_pct:30.4 },
+  { nombre:'Pulóver Negro Poliespandex', costo:950, inversion:1009, precio_venta:2400, ganancia:1391, ganancia_neta:871.6, margen_pct:36.3 },
+  { nombre:'Pulóver Beige Poliespandex', costo:950, inversion:927.25, precio_venta:2400, ganancia:1472.75, ganancia_neta:1072.8, margen_pct:44.7 },
+  { nombre:'Pop Sockets', costo:515, inversion:568.15, precio_venta:1000, ganancia:431.85, ganancia_neta:349.48, margen_pct:34.9 },
+  { nombre:'Imanes', costo:499.55, inversion:566.72, precio_venta:1100, ganancia:533.28, ganancia_neta:404.23, margen_pct:36.7 },
+  { nombre:'Pulóver Colores c/ Vinil Sublimable', costo:952.75, inversion:1077.5, precio_venta:2700, ganancia:1622.5, ganancia_neta:607.76, margen_pct:22.5 },
+  { nombre:'Delantal Negro c/ Vinil Sublimable', costo:618, inversion:728, precio_venta:2200, ganancia:1472, ganancia_neta:532.76, margen_pct:24.2 },
+  { nombre:'Propio Vinil Textil Sublimable', costo:0, inversion:574.04, precio_venta:1500, ganancia:925.96, ganancia_neta:425.96, margen_pct:28.4 },
+  { nombre:'Bolsos Grandes', costo:2000, inversion:2326, precio_venta:3000, ganancia:674, ganancia_neta:674, margen_pct:22.5 },
+];
+
+const PROD_COLS = ['P.Blanco','P.Niño','P.Poliespx-Bla','P.Poliespx-N','P.Poliespx-Be',
+  'P.Color c/ vinil sublim','P.Color c/ vinil textil','Jarra de Crsital','Losa 10','Losa 20',
+  'Losa 15','Jarra 11oz','Gorra','Jaba d/ Tela','Bolso Grande','Llavero','Jarra Mágica',
+  'Mauspad','Bot.Aluminio','Enguatadas','Portacel','Tazas d/ Café','Pomos 750ml',
+  'J.Térmicas','Pom c/ Absorv','Delantal Vinil/Sublim','Delantal Vinil/textil',
+  'Monedero','Cojín','PoPSocket','Fotorroca'];
+
+// ============================================================
+// HELPERS
+// ============================================================
+
+const fmt = n => Number(n).toLocaleString('es-ES', {minimumFractionDigits:0, maximumFractionDigits:0});
+const fmtD = n => Number(n).toLocaleString('es-ES', {minimumFractionDigits:2, maximumFractionDigits:2});
+const pct = n => `${Number(n).toFixed(1)}%`;
+
+const CHART_DEFAULTS = {
+  color: '#e8e8f0',
+  borderColor: '#2a2a3a',
+  plugins: {
+    legend: { labels: { color:'#7070a0', font:{family:'Space Mono', size:10}, boxWidth:12 } },
+    tooltip: {
+      backgroundColor:'#1a1a24',
+      borderColor:'#2a2a3a',
+      borderWidth:1,
+      titleColor:'#e8e8f0',
+      bodyColor:'#7070a0',
+      padding:12,
+    }
+  }
+};
+
+Chart.defaults.color = '#7070a0';
+Chart.defaults.borderColor = '#2a2a3a';
+Chart.defaults.font.family = 'Syne';
+
+let charts = {};
+
+function destroyChart(id) {
+  if (charts[id]) { charts[id].destroy(); delete charts[id]; }
+}
+
+// ============================================================
+// TAB SWITCHING
+// ============================================================
+
+function switchTab(id) {
+  document.querySelectorAll('.tab-page').forEach(p => p.classList.remove('active'));
+  document.querySelectorAll('nav button').forEach(b => b.classList.remove('active'));
+  document.getElementById('tab-' + id).classList.add('active');
+  event.target.classList.add('active');
+
+  if (id === 'rentabilidad') renderRentabilidadCharts();
+  if (id === 'salarios') renderSalariosTab();
+}
+
+// ============================================================
+// INIT
+// ============================================================
+
+function init() {
+  renderDayCards();
+  renderResumenCharts();
+  renderDailyTable();
+  renderProductTable();
+  populateFilterDia();
+  renderSalariosTab();
+}
+
+// ============================================================
+// RESUMEN
+// ============================================================
+
+function renderDayCards() {
+  const container = document.getElementById('day-cards');
+  container.innerHTML = DAILY.map((d, i) => {
+    const pos = d.ganancia_neta >= 0;
+    return `
+    <div class="day-card ${i===2?'selected':''}" onclick="selectDay(this, ${i})">
+      <div class="day-card-date">${d.label}</div>
+      <div class="day-card-venta ${pos?'pos':'neg'}">${pos?'':'-'}${fmt(Math.abs(d.ganancia_neta))}</div>
+      <div style="font-family:var(--font-mono);font-size:10px;color:var(--text-dim);margin-top:4px;">
+        Venta: ${fmt(d.venta)} CUP
+      </div>
+      <div style="margin-top:8px;">
+        <span class="badge ${pos?'badge-green':'badge-red'}">${pos?'Positivo':'Sin ventas'}</span>
+      </div>
+    </div>`;
+  }).join('');
+}
+
+function selectDay(el, idx) {
+  document.querySelectorAll('.day-card').forEach(c => c.classList.remove('selected'));
+  el.classList.add('selected');
+}
+
+function renderResumenCharts() {
+  const labels = DAILY.map(d => d.label.split(' ').slice(1).join(' '));
+  const ventas = DAILY.map(d => d.venta);
+  const inversiones = DAILY.map(d => d.inversion);
+  const ganancias = DAILY.map(d => d.ganancia_neta);
+
+  // Chart 1: Venta vs Inversión
+  destroyChart('chartVentaInv');
+  const ctx1 = document.getElementById('chartVentaInv').getContext('2d');
+  charts['chartVentaInv'] = new Chart(ctx1, {
+    type: 'bar',
+    data: {
+      labels,
+      datasets: [
+        { label:'Venta', data: ventas, backgroundColor:'rgba(0,229,160,0.7)', borderRadius:6 },
+        { label:'Inversión', data: inversiones, backgroundColor:'rgba(255,107,53,0.6)', borderRadius:6 }
+      ]
+    },
+    options: {
+      responsive:true, maintainAspectRatio:false,
+      plugins: { ...CHART_DEFAULTS.plugins },
+      scales: {
+        x: { grid:{color:'#1a1a24'}, ticks:{color:'#7070a0', font:{size:10}} },
+        y: { grid:{color:'#1a1a24'}, ticks:{color:'#7070a0', font:{size:10},
+          callback: v => fmt(v/1000)+'k' } }
+      }
+    }
+  });
+
+  // Chart 2: Ganancia Neta
+  destroyChart('chartGanancia');
+  const ctx2 = document.getElementById('chartGanancia').getContext('2d');
+  charts['chartGanancia'] = new Chart(ctx2, {
+    type: 'line',
+    data: {
+      labels,
+      datasets: [{
+        label:'Ganancia Neta',
+        data: ganancias,
+        borderColor:'#7b61ff',
+        backgroundColor:'rgba(123,97,255,0.1)',
+        tension:0.4,
+        fill:true,
+        pointBackgroundColor:'#7b61ff',
+        pointRadius:5,
+        pointHoverRadius:8,
+      }]
+    },
+    options: {
+      responsive:true, maintainAspectRatio:false,
+      plugins: { ...CHART_DEFAULTS.plugins },
+      scales: {
+        x: { grid:{color:'#1a1a24'}, ticks:{color:'#7070a0', font:{size:10}} },
+        y: { grid:{color:'#1a1a24'}, ticks:{color:'#7070a0', font:{size:10},
+          callback: v => fmt(v/1000)+'k' } }
+      }
+    }
+  });
+
+  // Chart 3: Unidades acumuladas por producto
+  const totales = {};
+  PROD_COLS.forEach(p => totales[p] = 0);
+  DAILY.forEach(d => { PROD_COLS.forEach(p => { totales[p] += (d.cantidades[p]||0); }); });
+  const sorted = Object.entries(totales).filter(([,v])=>v>0).sort((a,b)=>b[1]-a[1]);
+
+  destroyChart('chartUnidades');
+  const ctx3 = document.getElementById('chartUnidades').getContext('2d');
+  charts['chartUnidades'] = new Chart(ctx3, {
+    type:'bar',
+    data: {
+      labels: sorted.map(([k])=>k),
+      datasets:[{
+        label:'Unidades',
+        data: sorted.map(([,v])=>v),
+        backgroundColor: sorted.map((_,i)=>`hsl(${160+i*22},70%,55%)`),
+        borderRadius:6
+      }]
+    },
+    options:{
+      indexAxis:'y',
+      responsive:true, maintainAspectRatio:false,
+      plugins:{ ...CHART_DEFAULTS.plugins, legend:{display:false} },
+      scales:{
+        x:{ grid:{color:'#1a1a24'}, ticks:{color:'#7070a0',font:{size:10}} },
+        y:{ grid:{color:'transparent'}, ticks:{color:'#e8e8f0',font:{size:11}} }
+      }
+    }
+  });
+}
+
+// ============================================================
+// DAILY TABLE
+// ============================================================
+
+function populateFilterDia() {
+  const sel = document.getElementById('filterDia');
+  DAILY.forEach(d => {
+    const opt = document.createElement('option');
+    opt.value = d.fecha;
+    opt.textContent = d.label;
+    sel.appendChild(opt);
+  });
+}
+
+function renderDailyTable() {
+  const filter = document.getElementById('filterDia').value;
+  const data = filter ? DAILY.filter(d=>d.fecha===filter) : DAILY;
+  const tbody = document.getElementById('dailyTableBody');
+
+  tbody.innerHTML = data.map(d => {
+    const margen = d.venta > 0 ? (d.ganancia_neta / d.venta * 100) : 0;
+    const pos = d.ganancia_neta >= 0;
+    return `<tr>
+      <td style="font-weight:700;">${d.label}</td>
+      <td class="num">${fmt(d.venta)}</td>
+      <td class="num">${fmt(d.inversion)}</td>
+      <td class="num ${d.ganancia>=0?'pos':'neg'}">${fmt(d.ganancia)}</td>
+      <td class="num ${pos?'pos':'neg'}" style="font-weight:700;">${fmt(d.ganancia_neta)}</td>
+      <td class="num">${pct(margen)}</td>
+      <td><span class="badge ${pos?'badge-green':'badge-red'}">${pos?'✓ Positivo':'✗ Pérdida'}</span></td>
+    </tr>`;
+  }).join('');
+
+  // Units table
+  renderUnitsTable(filter);
+}
+
+function renderUnitsTable(filter) {
+  const data = filter ? DAILY.filter(d=>d.fecha===filter) : DAILY;
+  const head = document.getElementById('unitsTableHead');
+  const body = document.getElementById('unitsTableBody');
+
+  head.innerHTML = `<tr><th>Producto</th>${data.map(d=>`<th>${d.fecha}</th>`).join('')}<th>TOTAL</th></tr>`;
+
+  // Only show products that have at least 1 sale
+  const rows = PROD_COLS.map(prod => {
+    const vals = data.map(d => d.cantidades[prod]||0);
+    const total = vals.reduce((a,b)=>a+b,0);
+    return { prod, vals, total };
+  }).filter(r => r.total > 0);
+
+  body.innerHTML = rows.length ? rows.map(r =>
+    `<tr><td style="font-weight:600;">${r.prod}</td>${r.vals.map(v=>`<td class="num">${v||'-'}</td>`).join('')}<td class="num pos" style="font-weight:700;">${r.total}</td></tr>`
+  ).join('') : `<tr><td colspan="20" class="empty">Sin ventas en el período seleccionado</td></tr>`;
+}
+
+// ============================================================
+// PRODUCT TABLE
+// ============================================================
+
+function renderProductTable() {
+  const search = document.getElementById('searchProd').value.toLowerCase();
+  const sortKey = document.getElementById('sortProd').value;
+  const maxVal = Math.max(...PRODUCTS.map(p=>p.precio_venta));
+
+  let data = PRODUCTS.filter(p => p.nombre.toLowerCase().includes(search));
+  data.sort((a,b) => sortKey === 'nombre' ? a.nombre.localeCompare(b.nombre) : b[sortKey] - a[sortKey]);
+
+  const tbody = document.getElementById('productTableBody');
+  tbody.innerHTML = data.map((p,i) => `
+    <tr>
+      <td class="num" style="color:var(--text-dim)">${i+1}</td>
+      <td style="font-weight:600;min-width:180px;">${p.nombre}</td>
+      <td class="num">${fmt(p.costo)}</td>
+      <td class="num">${fmtD(p.inversion)}</td>
+      <td class="num" style="color:var(--accent4);font-weight:700;">${fmt(p.precio_venta)}</td>
+      <td class="num">${fmtD(p.ganancia)}</td>
+      <td class="num ${p.ganancia_neta>=0?'pos':'neg'}" style="font-weight:700;">${fmtD(p.ganancia_neta)}</td>
+      <td>
+        <div style="display:flex;align-items:center;gap:8px;">
+          <span class="num" style="color:${p.margen_pct>=40?'var(--green)':p.margen_pct>=25?'var(--accent4)':'var(--red)'};font-weight:700;">${pct(p.margen_pct)}</span>
+          <div class="progress-bar" style="width:60px;"><div class="progress-fill" style="width:${p.margen_pct}%;background:${p.margen_pct>=40?'var(--green)':p.margen_pct>=25?'var(--accent4)':'var(--red)'}"></div></div>
+        </div>
+      </td>
+    </tr>
+  `).join('');
+}
+
+// ============================================================
+// RENTABILIDAD
+// ============================================================
+
+function renderRentabilidadCharts() {
+  const sorted = [...PRODUCTS].sort((a,b)=>b.margen_pct-a.margen_pct);
+  const top10 = sorted.slice(0,10);
+
+  // Horizontal bar: top 10 margen
+  destroyChart('chartMargen');
+  const ctx = document.getElementById('chartMargen').getContext('2d');
+  charts['chartMargen'] = new Chart(ctx, {
+    type:'bar',
+    data:{
+      labels: top10.map(p=>p.nombre.length>28?p.nombre.slice(0,25)+'...':p.nombre),
+      datasets:[
+        { label:'Margen %', data: top10.map(p=>p.margen_pct),
+          backgroundColor: top10.map(p=>p.margen_pct>=40?'rgba(0,229,160,0.8)':p.margen_pct>=25?'rgba(255,214,10,0.8)':'rgba(255,107,53,0.8)'),
+          borderRadius:6 },
+        { label:'Ganancia Neta (÷100)', data: top10.map(p=>p.ganancia_neta/100),
+          backgroundColor:'rgba(123,97,255,0.5)', borderRadius:6 }
+      ]
+    },
+    options:{
+      indexAxis:'y',
+      responsive:true, maintainAspectRatio:false,
+      plugins:{ ...CHART_DEFAULTS.plugins },
+      scales:{
+        x:{ grid:{color:'#1a1a24'}, ticks:{color:'#7070a0',font:{size:10}} },
+        y:{ grid:{color:'transparent'}, ticks:{color:'#e8e8f0',font:{size:11}} }
+      }
+    }
+  });
+
+  // Top/Bottom cards
+  const topList = sorted.slice(0,5);
+  const bottomList = sorted.slice(-5).reverse();
+
+  document.getElementById('topMargen').innerHTML = topList.map(p=>`
+    <div style="display:flex;justify-content:space-between;align-items:center;padding:10px 0;border-bottom:1px solid var(--border);">
+      <span style="font-size:13px;font-weight:600;">${p.nombre}</span>
+      <span class="num pos" style="font-weight:800;font-size:15px;">${pct(p.margen_pct)}</span>
+    </div>`).join('');
+
+  document.getElementById('bottomMargen').innerHTML = bottomList.map(p=>`
+    <div style="display:flex;justify-content:space-between;align-items:center;padding:10px 0;border-bottom:1px solid var(--border);">
+      <span style="font-size:13px;font-weight:600;">${p.nombre}</span>
+      <span class="num" style="font-weight:800;font-size:15px;color:var(--accent4)">${pct(p.margen_pct)}</span>
+    </div>`).join('');
+
+  // Scatter: precio vs ganancia neta
+  destroyChart('chartScatter');
+  const ctx2 = document.getElementById('chartScatter').getContext('2d');
+  charts['chartScatter'] = new Chart(ctx2, {
+    type:'scatter',
+    data:{
+      datasets:[{
+        label:'Productos',
+        data: PRODUCTS.map(p=>({x:p.precio_venta, y:p.ganancia_neta, nombre:p.nombre})),
+        backgroundColor:'rgba(123,97,255,0.7)',
+        pointRadius:7,
+        pointHoverRadius:10,
+      }]
+    },
+    options:{
+      responsive:true, maintainAspectRatio:false,
+      plugins:{
+        ...CHART_DEFAULTS.plugins,
+        tooltip:{ ...CHART_DEFAULTS.plugins.tooltip,
+          callbacks:{ label: ctx => `${ctx.raw.nombre}: $${fmt(ctx.raw.x)} → $${fmt(ctx.raw.y)}` }
+        }
+      },
+      scales:{
+        x:{ grid:{color:'#1a1a24'}, title:{display:true,text:'Precio Venta (CUP)',color:'#7070a0'}, ticks:{color:'#7070a0',font:{size:10}} },
+        y:{ grid:{color:'#1a1a24'}, title:{display:true,text:'Ganancia Neta (CUP)',color:'#7070a0'}, ticks:{color:'#7070a0',font:{size:10}} }
+      }
+    }
+  });
+}
+
+// ============================================================
+// SALARIOS
+// ============================================================
+
+function renderSalariosTab() {
+  const totalDanay = DAILY.reduce((s,d)=>s+(d.salDanay||0),0);
+  const totalDayan = DAILY.reduce((s,d)=>s+(d.salDayan||0),0);
+
+  document.getElementById('salDanay').textContent = fmt(totalDanay);
+  document.getElementById('salDayan').textContent = fmt(totalDayan);
+
+  const labels = DAILY.map(d=>d.label.split(' ').slice(1).join(' '));
+
+  destroyChart('chartSalarios');
+  const ctx = document.getElementById('chartSalarios').getContext('2d');
+  charts['chartSalarios'] = new Chart(ctx, {
+    type:'bar',
+    data:{
+      labels,
+      datasets:[
+        { label:'Danay', data:DAILY.map(d=>d.salDanay||0), backgroundColor:'rgba(123,97,255,0.7)', borderRadius:6 },
+        { label:'Dayan', data:DAILY.map(d=>d.salDayan||0), backgroundColor:'rgba(255,107,53,0.6)', borderRadius:6 }
+      ]
+    },
+    options:{
+      responsive:true, maintainAspectRatio:false,
+      plugins:{ ...CHART_DEFAULTS.plugins },
+      scales:{
+        x:{ grid:{color:'#1a1a24'}, ticks:{color:'#7070a0',font:{size:10}} },
+        y:{ grid:{color:'#1a1a24'}, ticks:{color:'#7070a0',font:{size:10}, callback:v=>fmt(v/1000)+'k'} }
+      }
+    }
+  });
+
+  const tbody = document.getElementById('salTableBody');
+  tbody.innerHTML = DAILY.map(d => {
+    const total = (d.salDanay||0)+(d.salDayan||0);
+    const pctSal = d.ganancia_neta>0 ? (total/d.ganancia_neta*100) : 0;
+    return `<tr>
+      <td style="font-weight:700;">${d.label}</td>
+      <td class="num ${d.salDanay>=0?'pos':'neg'}">${fmt(d.salDanay||0)}</td>
+      <td class="num ${d.salDayan>=0?'pos':'neg'}">${fmt(d.salDayan||0)}</td>
+      <td class="num" style="font-weight:700;">${fmt(total)}</td>
+      <td class="num">${pct(pctSal)}</td>
+    </tr>`;
+  }).join('');
+}
+
+// ============================================================
+// START
+// ============================================================
+init();
+</script>
+</body>
+</html>

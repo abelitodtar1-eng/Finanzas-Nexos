@@ -1,0 +1,591 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Dashboard Contabilidad 2026</title>
+<link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500;600&family=Sora:wght@300;400;600;700&display=swap" rel="stylesheet">
+<script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.js"></script>
+<style>
+  :root {
+    --bg: #0b0f1a;
+    --surface: #111827;
+    --surface2: #1a2236;
+    --border: rgba(255,255,255,0.07);
+    --accent: #00e5b4;
+    --accent2: #3b82f6;
+    --danger: #f43f5e;
+    --warning: #f59e0b;
+    --text: #e8eaf0;
+    --muted: #6b7280;
+    --font-mono: 'IBM Plex Mono', monospace;
+    --font-body: 'Sora', sans-serif;
+  }
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body {
+    background: var(--bg);
+    color: var(--text);
+    font-family: var(--font-body);
+    font-size: 14px;
+    min-height: 100vh;
+  }
+
+  /* GRID LINES BG */
+  body::before {
+    content: '';
+    position: fixed;
+    inset: 0;
+    background-image:
+      linear-gradient(rgba(255,255,255,0.02) 1px, transparent 1px),
+      linear-gradient(90deg, rgba(255,255,255,0.02) 1px, transparent 1px);
+    background-size: 40px 40px;
+    pointer-events: none;
+    z-index: 0;
+  }
+
+  .wrapper { position: relative; z-index: 1; max-width: 1280px; margin: 0 auto; padding: 2rem 1.5rem; }
+
+  /* HEADER */
+  header {
+    display: flex;
+    align-items: flex-start;
+    justify-content: space-between;
+    margin-bottom: 2rem;
+    padding-bottom: 1.5rem;
+    border-bottom: 1px solid var(--border);
+    flex-wrap: wrap;
+    gap: 1rem;
+  }
+  .header-left h1 {
+    font-family: var(--font-mono);
+    font-size: 1.5rem;
+    font-weight: 600;
+    letter-spacing: -0.02em;
+    color: var(--accent);
+  }
+  .header-left p {
+    font-size: 12px;
+    color: var(--muted);
+    margin-top: 4px;
+    font-family: var(--font-mono);
+  }
+  .header-right { display: flex; gap: 12px; flex-wrap: wrap; }
+
+  /* TIPO DE CAMBIO */
+  .rate-card {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 10px;
+    padding: 10px 18px;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    min-width: 130px;
+  }
+  .rate-label { font-family: var(--font-mono); font-size: 10px; color: var(--muted); text-transform: uppercase; letter-spacing: 0.1em; margin-bottom: 4px; }
+  .rate-value { font-family: var(--font-mono); font-size: 1.4rem; font-weight: 600; color: var(--accent); }
+  .rate-sub { font-size: 10px; color: var(--muted); margin-top: 2px; }
+
+  /* SELECTOR MONEDA */
+  .currency-toggle {
+    display: flex;
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    overflow: hidden;
+    align-self: center;
+  }
+  .currency-toggle button {
+    background: none;
+    border: none;
+    color: var(--muted);
+    font-family: var(--font-mono);
+    font-size: 12px;
+    padding: 8px 16px;
+    cursor: pointer;
+    transition: all 0.2s;
+  }
+  .currency-toggle button.active {
+    background: var(--accent);
+    color: #0b0f1a;
+    font-weight: 600;
+  }
+
+  /* METRIC CARDS ROW */
+  .metrics {
+    display: grid;
+    grid-template-columns: repeat(4, minmax(0,1fr));
+    gap: 12px;
+    margin-bottom: 1.5rem;
+  }
+  @media(max-width:700px){ .metrics { grid-template-columns: 1fr 1fr; } }
+  .metric {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 12px;
+    padding: 1.1rem 1.2rem;
+    position: relative;
+    overflow: hidden;
+    transition: border-color 0.2s;
+  }
+  .metric:hover { border-color: rgba(255,255,255,0.15); }
+  .metric::after {
+    content: '';
+    position: absolute;
+    top: 0; left: 0; right: 0;
+    height: 2px;
+    background: var(--accent);
+    opacity: 0.5;
+  }
+  .metric.danger::after { background: var(--danger); }
+  .metric.warn::after { background: var(--warning); }
+  .metric.blue::after { background: var(--accent2); }
+  .metric-label { font-size: 11px; color: var(--muted); text-transform: uppercase; letter-spacing: 0.08em; font-family: var(--font-mono); margin-bottom: 8px; }
+  .metric-value { font-family: var(--font-mono); font-size: 1.5rem; font-weight: 600; }
+  .metric-value.pos { color: var(--accent); }
+  .metric-value.neg { color: var(--danger); }
+  .metric-value.warn { color: var(--warning); }
+  .metric-sub { font-size: 11px; color: var(--muted); margin-top: 4px; font-family: var(--font-mono); }
+
+  /* SECTION */
+  .section-title {
+    font-family: var(--font-mono);
+    font-size: 11px;
+    text-transform: uppercase;
+    letter-spacing: 0.12em;
+    color: var(--muted);
+    margin-bottom: 12px;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+  }
+  .section-title::after { content: ''; flex: 1; height: 1px; background: var(--border); }
+
+  /* CARDS */
+  .card {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 12px;
+    padding: 1.2rem;
+  }
+
+  /* CHARTS GRID */
+  .charts-row { display: grid; grid-template-columns: 1.3fr 1fr; gap: 14px; margin-bottom: 1.5rem; }
+  @media(max-width:800px){ .charts-row { grid-template-columns: 1fr; } }
+
+  /* TABLE */
+  .data-table { width: 100%; border-collapse: collapse; font-family: var(--font-mono); font-size: 12px; }
+  .data-table th {
+    text-align: left;
+    padding: 8px 10px;
+    color: var(--muted);
+    font-size: 10px;
+    text-transform: uppercase;
+    letter-spacing: 0.08em;
+    border-bottom: 1px solid var(--border);
+    font-weight: 500;
+  }
+  .data-table td {
+    padding: 7px 10px;
+    border-bottom: 1px solid rgba(255,255,255,0.03);
+    color: var(--text);
+  }
+  .data-table tr:hover td { background: rgba(255,255,255,0.025); }
+  .data-table .num { text-align: right; }
+  .data-table .pos-val { color: var(--accent); }
+  .data-table .neg-val { color: var(--danger); }
+
+  .badge {
+    display: inline-block;
+    font-size: 10px;
+    padding: 2px 7px;
+    border-radius: 4px;
+    font-family: var(--font-mono);
+  }
+  .badge-ok { background: rgba(0,229,180,0.12); color: var(--accent); border: 1px solid rgba(0,229,180,0.2); }
+  .badge-low { background: rgba(244,63,94,0.12); color: var(--danger); border: 1px solid rgba(244,63,94,0.2); }
+  .badge-zero { background: rgba(245,158,11,0.12); color: var(--warning); border: 1px solid rgba(245,158,11,0.2); }
+
+  /* GASTOS */
+  .gastos-grid { display: grid; grid-template-columns: repeat(3, minmax(0,1fr)); gap: 10px; }
+  @media(max-width:600px){ .gastos-grid { grid-template-columns: 1fr 1fr; } }
+  .gasto-item {
+    background: var(--surface2);
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    padding: 10px 14px;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+  }
+  .gasto-name { font-size: 12px; color: var(--muted); }
+  .gasto-val { font-family: var(--font-mono); font-size: 13px; font-weight: 600; color: var(--danger); }
+
+  /* SCROLLABLE TABLE WRAPPER */
+  .table-scroll { overflow-x: auto; max-height: 420px; overflow-y: auto; }
+  .table-scroll::-webkit-scrollbar { width: 4px; height: 4px; }
+  .table-scroll::-webkit-scrollbar-track { background: transparent; }
+  .table-scroll::-webkit-scrollbar-thumb { background: rgba(255,255,255,0.1); border-radius: 4px; }
+
+  .bottom-row { display: grid; grid-template-columns: 1fr 1fr; gap: 14px; margin-bottom: 1.5rem; }
+  @media(max-width:800px){ .bottom-row { grid-template-columns: 1fr; } }
+
+  /* ANIMATE IN */
+  @keyframes fadeUp { from { opacity:0; transform: translateY(12px); } to { opacity:1; transform: translateY(0); } }
+  .metric, .card { animation: fadeUp 0.4s ease both; }
+  .metric:nth-child(1){animation-delay:0.05s}
+  .metric:nth-child(2){animation-delay:0.1s}
+  .metric:nth-child(3){animation-delay:0.15s}
+  .metric:nth-child(4){animation-delay:0.2s}
+
+  /* LEGEND */
+  .legend { display: flex; flex-wrap: wrap; gap: 12px; margin-bottom: 10px; font-size: 11px; color: var(--muted); font-family: var(--font-mono); }
+  .legend span { display: flex; align-items: center; gap: 5px; }
+  .leg-sq { width: 9px; height: 9px; border-radius: 2px; display: inline-block; flex-shrink: 0; }
+
+  /* FOOTER */
+  footer { text-align: center; padding: 2rem 0 1rem; font-size: 11px; color: var(--muted); font-family: var(--font-mono); }
+  footer span { color: var(--accent); }
+</style>
+</head>
+<body>
+<div class="wrapper">
+
+  <header>
+    <div class="header-left">
+      <h1>// CONTABILIDAD_2026</h1>
+      <p>Semana del 23-03-2026 &nbsp;·&nbsp; Período activo</p>
+    </div>
+    <div class="header-right">
+      <div class="rate-card">
+        <div class="rate-label">1 USD =</div>
+        <div class="rate-value" id="rate-mlc-display">515</div>
+        <div class="rate-sub">MLC (tasa informal)</div>
+      </div>
+      <div class="rate-card">
+        <div class="rate-label">1 USD =</div>
+        <div class="rate-value">400</div>
+        <div class="rate-sub">MLC (tasa CADECA)</div>
+      </div>
+      <div class="currency-toggle">
+        <button class="active" onclick="setCurrency('MLC')">MLC</button>
+        <button onclick="setCurrency('USD')">USD</button>
+      </div>
+    </div>
+  </header>
+
+  <!-- KPI CARDS -->
+  <div class="section-title">resumen general</div>
+  <div class="metrics" id="kpi-cards">
+    <div class="metric blue">
+      <div class="metric-label">Venta potencial</div>
+      <div class="metric-value" id="kpi-venta" style="color:var(--accent2)">$64,800</div>
+      <div class="metric-sub" id="kpi-venta-sub">37 artículos · MLC</div>
+    </div>
+    <div class="metric">
+      <div class="metric-label">Inversión total</div>
+      <div class="metric-value warn" id="kpi-inv">$39,686</div>
+      <div class="metric-sub" id="kpi-inv-sub">Costo acumulado · MLC</div>
+    </div>
+    <div class="metric">
+      <div class="metric-label">Ganancia bruta</div>
+      <div class="metric-value pos" id="kpi-gan">$25,114</div>
+      <div class="metric-sub" id="kpi-gan-sub">Antes de 20% S.T. · MLC</div>
+    </div>
+    <div class="metric danger">
+      <div class="metric-label">Resultado neto</div>
+      <div class="metric-value neg" id="kpi-neto">-$6,409</div>
+      <div class="metric-sub" id="kpi-neto-sub">Gast. indirectos incluidos · MLC</div>
+    </div>
+  </div>
+
+  <!-- CHARTS ROW 1 -->
+  <div class="section-title">análisis de productos</div>
+  <div class="charts-row">
+    <div class="card">
+      <div class="legend">
+        <span><span class="leg-sq" style="background:#00e5b4"></span>Alta ganancia (≥600)</span>
+        <span><span class="leg-sq" style="background:#3b82f6"></span>Media (≥400)</span>
+        <span><span class="leg-sq" style="background:#f43f5e"></span>Baja (&lt;400)</span>
+      </div>
+      <div style="position:relative;width:100%;height:340px;"><canvas id="c1"></canvas></div>
+    </div>
+    <div class="card">
+      <div class="legend">
+        <span><span class="leg-sq" style="background:#3b82f6"></span>% margen neto por categoría</span>
+      </div>
+      <div style="position:relative;width:100%;height:340px;"><canvas id="c2"></canvas></div>
+    </div>
+  </div>
+
+  <!-- CHARTS ROW 2 -->
+  <div class="bottom-row">
+    <div class="card">
+      <div class="section-title" style="margin-bottom:10px">costo vs precio de venta</div>
+      <div class="legend">
+        <span><span class="leg-sq" style="background:#f43f5e"></span>Inversión</span>
+        <span><span class="leg-sq" style="background:#00e5b4"></span>Precio venta</span>
+      </div>
+      <div style="position:relative;width:100%;height:260px;"><canvas id="c3"></canvas></div>
+    </div>
+    <div class="card">
+      <div class="section-title" style="margin-bottom:10px">gastos indirectos</div>
+      <div class="gastos-grid" id="gastos-grid"></div>
+    </div>
+  </div>
+
+  <!-- TABLE -->
+  <div class="section-title">inventario físico · detalle completo</div>
+  <div class="card" style="margin-bottom:1.5rem;">
+    <div class="table-scroll">
+      <table class="data-table">
+        <thead>
+          <tr>
+            <th>Artículo</th>
+            <th class="num">Inv.</th>
+            <th class="num" id="th-inv">Inversión</th>
+            <th class="num" id="th-venta">P. Venta</th>
+            <th class="num" id="th-gan">Gan. Neta</th>
+            <th class="num">Margen</th>
+            <th style="text-align:center">Estado</th>
+          </tr>
+        </thead>
+        <tbody id="product-tbody"></tbody>
+      </table>
+    </div>
+  </div>
+
+  <footer>Dashboard generado para <span>Contabilidad 2026</span> &nbsp;·&nbsp; Tasa de cambio: <span>1 USD = 515 MLC</span> (informal) &nbsp;·&nbsp; <span>1 USD = 400 MLC</span> (CADECA)</footer>
+</div>
+
+<script>
+const USD_RATE = 515;
+let currency = 'MLC';
+
+const products = [
+  {name:'Pulóver Blanco Dri-Fit',     inv:1034, costo:1061.75,   venta:2000, ganNeta:750.6},
+  {name:'Pulóver Blanco Niño',         inv:71,   costo:881.5,    venta:1800, ganNeta:734.8},
+  {name:'Jarra Cristal 16oz',          inv:61,   costo:1903.25,  venta:3000, ganNeta:877.4},
+  {name:'Losa 20x20 c/soporte',        inv:1,    costo:901.5,    venta:1600, ganNeta:558.8},
+  {name:'Losa 15x15 c/soporte',        inv:1,    costo:750.75,   venta:1300, ganNeta:439.4},
+  {name:'Losa 10x10 c/soporte',        inv:0,    costo:275.38,   venta:1200, ganNeta:739.7},
+  {name:'Jarra 11oz',                  inv:177,  costo:856.67,   venta:1300, ganNeta:354.67},
+  {name:'Gorra',                       inv:29,   costo:1093.15,  venta:2000, ganNeta:725.48},
+  {name:'Jaba de Tela',                inv:6,    costo:556,      venta:1200, ganNeta:515.2},
+  {name:'Llavero Acrílico',            inv:369,  costo:182.65,   venta:400,  ganNeta:173.88},
+  {name:'Mauspad',                     inv:17,   costo:357.5,    venta:1000, ganNeta:514},
+  {name:'Bot. Aluminio',               inv:59,   costo:1894.67,  venta:2500, ganNeta:484.27},
+  {name:'Enguatadas',                  inv:2,    costo:1393.5,   venta:2200, ganNeta:645.2},
+  {name:'Portacelular',                inv:41,   costo:603.75,   venta:1200, ganNeta:477},
+  {name:'Pomos Aluminio c/Absorv.',    inv:52,   costo:2160.75,  venta:2800, ganNeta:511.4},
+  {name:'Tazas de Café',               inv:0,    costo:663.15,   venta:1500, ganNeta:669.48},
+  {name:'Pomos Deportivos 750ml',      inv:58,   costo:2676.5,   venta:3500, ganNeta:658.8},
+  {name:'Jarra Mágica',                inv:0,    costo:634.17,   venta:1300, ganNeta:532.67},
+  {name:'Jarras Térmicas',             inv:55,   costo:2659.17,  venta:3200, ganNeta:432.67},
+  {name:'P. Blanco Poliespandex',      inv:522,  costo:1496.5,   venta:2400, ganNeta:722.8},
+  {name:'Delantal Vinil Textil',       inv:3,    costo:1028.5,   venta:2000, ganNeta:777.2},
+  {name:'Propio Vinil Logo',           inv:0,    costo:210.94,   venta:500,  ganNeta:231.25},
+  {name:'Propio Vinil A4',             inv:0,    costo:371.88,   venta:900,  ganNeta:422.5},
+  {name:'Propio Sublimación',          inv:0,    costo:109,      venta:400,  ganNeta:232.8},
+  {name:'Monederos',                   inv:16,   costo:415,      venta:700,  ganNeta:228},
+  {name:'Fotorrocas',                  inv:1,    costo:1702.5,   venta:2300, ganNeta:478},
+  {name:'Cojines',                     inv:0,    costo:1356,     venta:2100, ganNeta:595.2},
+  {name:'P. Color Vinil Textil',       inv:811,  costo:1363.25,  venta:2200, ganNeta:669.4},
+  {name:'P. Negro Poliespandex',       inv:2,    costo:1310.5,   venta:2400, ganNeta:871.6},
+  {name:'P. Beige Poliespandex',       inv:0,    costo:1059,     venta:2400, ganNeta:1072.8},
+  {name:'Pop Sockets',                 inv:39,   costo:563.15,   venta:1000, ganNeta:349.48},
+  {name:'Imanes',                      inv:32,   costo:594.72,   venta:1100, ganNeta:404.23},
+  {name:'P. Color Vinil Sublim.',      inv:0,    costo:1940.3,   venta:2700, ganNeta:607.76},
+  {name:'Delantal Vinil Sublim.',      inv:0,    costo:1534.05,  venta:2200, ganNeta:532.76},
+  {name:'P. Vinil Textil Sublim.',     inv:0,    costo:967.55,   venta:1500, ganNeta:425.96},
+  {name:'Bolsos Grandes',              inv:4,    costo:2157.5,   venta:3000, ganNeta:674},
+];
+
+const gastos = [
+  {name:'Arrendamiento',   val:3250},
+  {name:'F. Trabajo',      val:846},
+  {name:'Retención F.T.',  val:284},
+  {name:'Contab./RR.HH.',  val:1500},
+  {name:'Sal. Danay',      val:640.9},
+  {name:'Sal. Dayan',      val:640.9},
+  {name:'Aporte Sal. 12.5%', val:529},
+];
+
+const fmt = (v) => {
+  const val = currency === 'USD' ? v / USD_RATE : v;
+  const sym = currency === 'USD' ? 'USD ' : 'MLC ';
+  return sym + val.toLocaleString('es', {minimumFractionDigits: currency==='USD'?2:0, maximumFractionDigits: currency==='USD'?2:0});
+};
+
+function setCurrency(c) {
+  currency = c;
+  document.querySelectorAll('.currency-toggle button').forEach(b => b.classList.toggle('active', b.textContent === c));
+  updateKPIs();
+  updateTable();
+  updateGastos();
+  updateCharts();
+}
+
+function updateKPIs() {
+  const mul = currency === 'USD' ? 1/USD_RATE : 1;
+  const sym = currency === 'USD' ? 'USD' : 'MLC';
+  document.getElementById('kpi-venta').textContent = fmt(64800);
+  document.getElementById('kpi-venta-sub').textContent = `37 artículos · ${sym}`;
+  document.getElementById('kpi-inv').textContent = fmt(39686);
+  document.getElementById('kpi-inv-sub').textContent = `Costo acumulado · ${sym}`;
+  document.getElementById('kpi-gan').textContent = fmt(25114);
+  document.getElementById('kpi-gan-sub').textContent = `Antes de 20% S.T. · ${sym}`;
+  document.getElementById('kpi-neto').textContent = '-' + fmt(6409);
+  document.getElementById('kpi-neto-sub').textContent = `Gast. indirectos incluidos · ${sym}`;
+  document.getElementById('th-inv').textContent = `Inversión (${sym})`;
+  document.getElementById('th-venta').textContent = `P. Venta (${sym})`;
+  document.getElementById('th-gan').textContent = `Gan. Neta (${sym})`;
+}
+
+function updateGastos() {
+  const g = document.getElementById('gastos-grid');
+  g.innerHTML = '';
+  gastos.forEach(item => {
+    const val = currency === 'USD' ? (item.val/USD_RATE).toFixed(2) : item.val.toFixed(0);
+    const sym = currency === 'USD' ? 'USD' : 'MLC';
+    g.innerHTML += `<div class="gasto-item"><span class="gasto-name">${item.name}</span><span class="gasto-val">-${sym} ${parseFloat(val).toLocaleString('es')}</span></div>`;
+  });
+}
+
+function updateTable() {
+  const tbody = document.getElementById('product-tbody');
+  const sorted = [...products].sort((a,b) => b.ganNeta - a.ganNeta);
+  tbody.innerHTML = '';
+  sorted.forEach(p => {
+    const margen = Math.round((p.ganNeta / p.venta) * 100);
+    const badge = p.inv === 0 ? `<span class="badge badge-zero">Agotado</span>` :
+                  p.inv <= 5 ? `<span class="badge badge-low">Stock bajo</span>` :
+                  `<span class="badge badge-ok">Disponible</span>`;
+    const costoFmt = fmt(p.costo);
+    const ventaFmt = fmt(p.venta);
+    const ganFmt = fmt(p.ganNeta);
+    tbody.innerHTML += `<tr>
+      <td>${p.name}</td>
+      <td class="num">${p.inv}</td>
+      <td class="num">${costoFmt}</td>
+      <td class="num">${ventaFmt}</td>
+      <td class="num pos-val">${ganFmt}</td>
+      <td class="num" style="color:var(--muted)">${margen}%</td>
+      <td style="text-align:center">${badge}</td>
+    </tr>`;
+  });
+}
+
+// CHARTS
+const chartDefaults = {
+  responsive: true,
+  maintainAspectRatio: false,
+  animation: { duration: 600 },
+};
+
+const sorted15 = [...products].sort((a,b) => b.ganNeta - a.ganNeta).slice(0,15);
+
+const chart1 = new Chart(document.getElementById('c1'), {
+  type: 'bar',
+  data: {
+    labels: sorted15.map(p => p.name),
+    datasets: [{
+      label: 'Ganancia neta',
+      data: sorted15.map(p => Math.round(p.ganNeta)),
+      backgroundColor: sorted15.map(p => p.ganNeta >= 600 ? '#00e5b4' : p.ganNeta >= 400 ? '#3b82f6' : '#f43f5e'),
+      borderRadius: 4,
+      borderSkipped: false,
+    }]
+  },
+  options: {
+    ...chartDefaults,
+    indexAxis: 'y',
+    plugins: {
+      legend: { display: false },
+      tooltip: { callbacks: { label: ctx => ' MLC ' + ctx.parsed.x.toLocaleString('es') } }
+    },
+    scales: {
+      x: { ticks: { color: '#6b7280', callback: v => 'MLC '+v, font:{size:10} }, grid: { color: 'rgba(255,255,255,0.04)' } },
+      y: { ticks: { color: '#9ca3af', font:{size:11} }, grid: { display:false } }
+    }
+  }
+});
+
+const categories = [
+  {cat:'Pulóveres',  margen:36},
+  {cat:'Jarras/Tazas', margen:35},
+  {cat:'Losas',     margen:54},
+  {cat:'Accesorios', margen:33},
+  {cat:'Recipientes', margen:24},
+  {cat:'Textiles',  margen:38},
+  {cat:'Delantales', margen:37},
+  {cat:'Otros',     margen:29},
+];
+
+const chart2 = new Chart(document.getElementById('c2'), {
+  type: 'radar',
+  data: {
+    labels: categories.map(c => c.cat),
+    datasets: [{
+      data: categories.map(c => c.margen),
+      backgroundColor: 'rgba(59,130,246,0.12)',
+      borderColor: '#3b82f6',
+      pointBackgroundColor: '#3b82f6',
+      pointRadius: 4,
+      borderWidth: 2,
+    }]
+  },
+  options: {
+    ...chartDefaults,
+    plugins: { legend:{display:false}, tooltip:{callbacks:{label: ctx => ctx.parsed.r+'%'}} },
+    scales: { r: {
+      beginAtZero: true,
+      ticks: { color:'#6b7280', callback: v=>v+'%', font:{size:10}, backdropColor:'transparent' },
+      grid: { color:'rgba(255,255,255,0.06)' },
+      angleLines: { color:'rgba(255,255,255,0.06)' },
+      pointLabels: { color:'#9ca3af', font:{size:11} }
+    }}
+  }
+});
+
+const top12 = [...products].sort((a,b)=>b.venta-a.venta).slice(0,12);
+const chart3 = new Chart(document.getElementById('c3'), {
+  type: 'bar',
+  data: {
+    labels: top12.map(p => p.name.length > 14 ? p.name.slice(0,13)+'…' : p.name),
+    datasets: [
+      { label:'Inversión', data: top12.map(p=>Math.round(p.costo)), backgroundColor:'#f43f5e99', borderRadius:3 },
+      { label:'P. Venta',  data: top12.map(p=>p.venta),             backgroundColor:'#00e5b499', borderRadius:3 },
+    ]
+  },
+  options: {
+    ...chartDefaults,
+    plugins: { legend:{display:false}, tooltip:{callbacks:{label:ctx=>' MLC '+ctx.parsed.y.toLocaleString('es')}} },
+    scales: {
+      x: { ticks:{color:'#6b7280',font:{size:9},maxRotation:40,autoSkip:false}, grid:{display:false} },
+      y: { ticks:{color:'#6b7280',callback:v=>'$'+v,font:{size:10}}, grid:{color:'rgba(255,255,255,0.04)'} }
+    }
+  }
+});
+
+function updateCharts() {
+  const mul = currency === 'USD' ? 1/USD_RATE : 1;
+  const sym = currency === 'USD' ? 'USD' : 'MLC';
+
+  chart1.data.datasets[0].data = sorted15.map(p => parseFloat((p.ganNeta * mul).toFixed(2)));
+  chart1.options.scales.x.ticks.callback = v => sym+' '+v.toLocaleString('es', {maximumFractionDigits:2});
+  chart1.options.plugins.tooltip.callbacks.label = ctx => ` ${sym} ${ctx.parsed.x.toLocaleString('es',{maximumFractionDigits:2})}`;
+  chart1.update();
+
+  chart3.data.datasets[0].data = top12.map(p => parseFloat((p.costo * mul).toFixed(2)));
+  chart3.data.datasets[1].data = top12.map(p => parseFloat((p.venta * mul).toFixed(2)));
+  chart3.update();
+}
+
+// INIT
+updateKPIs();
+updateTable();
+updateGastos();
+</script>
+</body>
+</html>

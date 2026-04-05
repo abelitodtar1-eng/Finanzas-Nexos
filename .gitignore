@@ -1,0 +1,13 @@
+# Variables sensibles y claves API
+.env
+*.env
+secrets/
+api-keys.md
+credentials.md
+.mcp.json
+
+# Dependencias
+node_modules/
+
+# Credenciales Google
+01.config/credenciales_google_sheet

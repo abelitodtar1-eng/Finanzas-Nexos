@@ -1,0 +1,129 @@
+
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500&family=IBM+Plex+Sans:wght@300;400;500&display=swap');
+  .fn-wrap { font-family: 'IBM Plex Sans', monospace; background: #0d0f14; border-radius: 12px; padding: 0; overflow: hidden; min-height: 520px; }
+  .fn-sidebar { width: 180px; background: #080a0e; border-right: 1px solid #1e2430; padding: 16px 0; display: flex; flex-direction: column; }
+  .fn-logo { padding: 12px 16px 20px; border-bottom: 1px solid #1e2430; margin-bottom: 12px; }
+  .fn-logo-text { font-family: 'IBM Plex Mono', monospace; font-size: 13px; color: #00d4aa; letter-spacing: 2px; font-weight: 500; }
+  .fn-logo-sub { font-size: 10px; color: #3a4255; letter-spacing: 1px; margin-top: 2px; }
+  .fn-nav-item { padding: 8px 16px; font-size: 12px; color: #4a5568; cursor: pointer; display: flex; align-items: center; gap: 8px; transition: all 0.15s; }
+  .fn-nav-item.active { color: #00d4aa; background: rgba(0,212,170,0.08); border-left: 2px solid #00d4aa; }
+  .fn-nav-dot { width: 4px; height: 4px; border-radius: 50%; background: currentColor; }
+  .fn-main { flex: 1; padding: 20px; overflow: auto; }
+  .fn-topbar { display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px; }
+  .fn-title { font-size: 11px; color: #3a4255; letter-spacing: 2px; text-transform: uppercase; font-family: 'IBM Plex Mono', monospace; }
+  .fn-badge { background: rgba(0,212,170,0.1); color: #00d4aa; font-size: 10px; padding: 3px 8px; border-radius: 4px; font-family: 'IBM Plex Mono', monospace; border: 1px solid rgba(0,212,170,0.2); }
+  .fn-cards { display: grid; grid-template-columns: repeat(4, 1fr); gap: 10px; margin-bottom: 16px; }
+  .fn-card { background: #111420; border: 1px solid #1e2430; border-radius: 8px; padding: 14px; }
+  .fn-card-label { font-size: 10px; color: #3a4255; letter-spacing: 1.5px; text-transform: uppercase; margin-bottom: 8px; font-family: 'IBM Plex Mono', monospace; }
+  .fn-card-value { font-size: 22px; font-weight: 500; color: #e8eaf0; font-family: 'IBM Plex Mono', monospace; }
+  .fn-card-value.green { color: #00d4aa; }
+  .fn-card-sub { font-size: 10px; color: #2a8a6f; margin-top: 4px; }
+  .fn-row { display: grid; grid-template-columns: 2fr 1fr; gap: 10px; margin-bottom: 16px; }
+  .fn-panel { background: #111420; border: 1px solid #1e2430; border-radius: 8px; padding: 14px; }
+  .fn-panel-title { font-size: 10px; color: #4a5568; letter-spacing: 1.5px; text-transform: uppercase; margin-bottom: 12px; font-family: 'IBM Plex Mono', monospace; }
+  .fn-bar-row { display: flex; align-items: center; gap: 8px; margin-bottom: 8px; }
+  .fn-bar-label { font-size: 11px; color: #4a5568; width: 60px; flex-shrink: 0; font-family: 'IBM Plex Mono', monospace; }
+  .fn-bar-track { flex: 1; height: 6px; background: #1e2430; border-radius: 3px; overflow: hidden; }
+  .fn-bar-fill { height: 100%; border-radius: 3px; background: linear-gradient(90deg, #00d4aa, #00a882); }
+  .fn-bar-val { font-size: 11px; color: #e8eaf0; width: 55px; text-align: right; font-family: 'IBM Plex Mono', monospace; }
+  .fn-mini-stat { display: flex; justify-content: space-between; align-items: center; padding: 6px 0; border-bottom: 1px solid #1a1e28; }
+  .fn-mini-stat:last-child { border-bottom: none; }
+  .fn-mini-label { font-size: 11px; color: #4a5568; }
+  .fn-mini-val { font-size: 12px; color: #e8eaf0; font-family: 'IBM Plex Mono', monospace; }
+  .fn-mini-val.up { color: #00d4aa; }
+  svg.fn-chart text { font-family: 'IBM Plex Mono', monospace; }
+</style>
+<div class="fn-wrap" style="display: flex;">
+  <div class="fn-sidebar">
+    <div class="fn-logo">
+      <div class="fn-logo-text">NEXOS</div>
+      <div class="fn-logo-sub">FINANZAS v2</div>
+    </div>
+    <div class="fn-nav-item active"><span class="fn-nav-dot"></span> Resumen</div>
+    <div class="fn-nav-item"><span class="fn-nav-dot"></span> Ventas</div>
+    <div class="fn-nav-item"><span class="fn-nav-dot"></span> Catálogo</div>
+    <div class="fn-nav-item"><span class="fn-nav-dot"></span> Rentabilidad</div>
+    <div class="fn-nav-item"><span class="fn-nav-dot"></span> Personal</div>
+    <div style="flex:1;"></div>
+    <div style="padding: 12px 16px; border-top: 1px solid #1e2430;">
+      <div style="font-size:10px; color:#3a4255; font-family:'IBM Plex Mono',monospace;">USD · 515 CUP</div>
+      <div style="font-size:10px; color:#3a4255; font-family:'IBM Plex Mono',monospace;">MLC · 400 CUP</div>
+    </div>
+  </div>
+  <div class="fn-main">
+    <div class="fn-topbar">
+      <div class="fn-title">Dashboard · Período activo</div>
+      <div class="fn-badge">6 períodos · 36 productos</div>
+    </div>
+    <div class="fn-cards">
+      <div class="fn-card">
+        <div class="fn-card-label">Venta total</div>
+        <div class="fn-card-value green">678,400</div>
+        <div class="fn-card-sub">CUP acumulado</div>
+      </div>
+      <div class="fn-card">
+        <div class="fn-card-label">Inversión</div>
+        <div class="fn-card-value">352,786</div>
+        <div class="fn-card-sub">costo mercancía</div>
+      </div>
+      <div class="fn-card">
+        <div class="fn-card-label">Ganancia neta</div>
+        <div class="fn-card-value green">228,328</div>
+        <div class="fn-card-sub">tras 20% s/ventas</div>
+      </div>
+      <div class="fn-card">
+        <div class="fn-card-label">Margen neto</div>
+        <div class="fn-card-value green">33.6%</div>
+        <div class="fn-card-sub">promedio catálogo</div>
+      </div>
+    </div>
+    <div class="fn-row">
+      <div class="fn-panel">
+        <div class="fn-panel-title">Rendimiento por período</div>
+        <svg class="fn-chart" width="100%" height="140" viewBox="0 0 400 140">
+          <line x1="0" y1="130" x2="400" y2="130" stroke="#1e2430" stroke-width="1"/>
+          <line x1="0" y1="100" x2="400" y2="100" stroke="#1e2430" stroke-width="0.5" stroke-dasharray="3,3"/>
+          <line x1="0" y1="70" x2="400" y2="70" stroke="#1e2430" stroke-width="0.5" stroke-dasharray="3,3"/>
+          <line x1="0" y1="40" x2="400" y2="40" stroke="#1e2430" stroke-width="0.5" stroke-dasharray="3,3"/>
+          <polyline points="30,95 90,80 150,60 210,72 270,45 340,38" fill="none" stroke="#00d4aa" stroke-width="2"/>
+          <circle cx="30" cy="95" r="3" fill="#00d4aa"/>
+          <circle cx="90" cy="80" r="3" fill="#00d4aa"/>
+          <circle cx="150" cy="60" r="3" fill="#00d4aa"/>
+          <circle cx="210" cy="72" r="3" fill="#00d4aa"/>
+          <circle cx="270" cy="45" r="3" fill="#00d4aa"/>
+          <circle cx="340" cy="38" r="3" fill="#00d4aa"/>
+          <polygon points="30,95 90,80 150,60 210,72 270,45 340,38 340,130 30,130" fill="rgba(0,212,170,0.06)"/>
+          <text x="30" y="140" fill="#3a4255" font-size="10">P1</text>
+          <text x="90" y="140" fill="#3a4255" font-size="10">P2</text>
+          <text x="150" y="140" fill="#3a4255" font-size="10">P3</text>
+          <text x="210" y="140" fill="#3a4255" font-size="10">P4</text>
+          <text x="270" y="140" fill="#3a4255" font-size="10">P5</text>
+          <text x="340" y="140" fill="#3a4255" font-size="10">P6</text>
+        </svg>
+      </div>
+      <div class="fn-panel">
+        <div class="fn-panel-title">Top productos</div>
+        <div class="fn-bar-row"><div class="fn-bar-label">Prod A</div><div class="fn-bar-track"><div class="fn-bar-fill" style="width:88%"></div></div><div class="fn-bar-val">41.2%</div></div>
+        <div class="fn-bar-row"><div class="fn-bar-label">Prod B</div><div class="fn-bar-track"><div class="fn-bar-fill" style="width:72%"></div></div><div class="fn-bar-val">38.7%</div></div>
+        <div class="fn-bar-row"><div class="fn-bar-label">Prod C</div><div class="fn-bar-track"><div class="fn-bar-fill" style="width:60%"></div></div><div class="fn-bar-val">35.1%</div></div>
+        <div class="fn-bar-row"><div class="fn-bar-label">Prod D</div><div class="fn-bar-track"><div class="fn-bar-fill" style="width:45%"></div></div><div class="fn-bar-val">31.4%</div></div>
+        <div class="fn-bar-row"><div class="fn-bar-label">Prod E</div><div class="fn-bar-track"><div class="fn-bar-fill" style="width:30%"></div></div><div class="fn-bar-val">28.9%</div></div>
+      </div>
+    </div>
+    <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 10px;">
+      <div class="fn-panel">
+        <div class="fn-panel-title">Personal</div>
+        <div class="fn-mini-stat"><span class="fn-mini-label">Danay · acumulado</span><span class="fn-mini-val up">0 CUP</span></div>
+        <div class="fn-mini-stat"><span class="fn-mini-label">Dayan · acumulado</span><span class="fn-mini-val up">0 CUP</span></div>
+        <div class="fn-mini-stat"><span class="fn-mini-label">% sobre ganancia</span><span class="fn-mini-val">—</span></div>
+      </div>
+      <div class="fn-panel">
+        <div class="fn-panel-title">Indicadores clave</div>
+        <div class="fn-mini-stat"><span class="fn-mini-label">Última hoja</span><span class="fn-mini-val">2-4-26</span></div>
+        <div class="fn-mini-stat"><span class="fn-mini-label">Períodos activos</span><span class="fn-mini-val">6</span></div>
+        <div class="fn-mini-stat"><span class="fn-mini-label">Productos catálogo</span><span class="fn-mini-val">36</span></div>
+      </div>
+    </div>
+  </div>
+</div>

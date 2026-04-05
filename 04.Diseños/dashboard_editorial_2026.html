@@ -1,0 +1,345 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Conta2026 — Dashboard Editorial</title>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&display=swap" rel="stylesheet">
+<style>
+*{box-sizing:border-box;margin:0;padding:0}
+body{font-family:'Inter',system-ui,sans-serif;background:#f5f5f2;color:#1a1a18;min-height:100vh}
+.shell{max-width:960px;margin:0 auto;padding:2rem 1.25rem 3rem}
+.top-bar{display:flex;justify-content:space-between;align-items:center;margin-bottom:2rem;padding-bottom:1rem;border-bottom:0.5px solid #d9d9d0}
+.brand{font-size:20px;font-weight:600;letter-spacing:-0.03em}
+.brand em{color:#3B6D11;font-style:normal}
+.header-meta{font-size:12px;color:#888880;text-align:right;line-height:1.5}
+.period-pills{display:flex;gap:6px;flex-wrap:wrap;margin-bottom:1.5rem}
+.pill{padding:5px 14px;border-radius:20px;font-size:12px;cursor:pointer;border:1px solid #d9d9d0;background:#fff;color:#666660;transition:all 0.15s;font-family:inherit}
+.pill:hover{border-color:#aaa;color:#333}
+.pill.on{background:#EAF3DE;color:#27500A;border-color:#97C459;font-weight:500}
+.kpis{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:12px;margin-bottom:1.5rem}
+@media(max-width:640px){.kpis{grid-template-columns:repeat(2,1fr)}.two-col{grid-template-columns:1fr!important}.shell{padding:1rem .75rem 2rem}}
+.kpi{background:#fff;border:0.5px solid #d9d9d0;border-radius:12px;padding:1.1rem 1rem;position:relative;overflow:hidden}
+.kpi-accent{position:absolute;top:0;left:0;right:0;height:3px}
+.kpi-lbl{font-size:10px;color:#888880;margin-bottom:7px;text-transform:uppercase;letter-spacing:0.07em}
+.kpi-val{font-size:23px;font-weight:600;letter-spacing:-0.03em;line-height:1}
+.kpi-sub{font-size:11px;color:#aaa;margin-top:5px}
+.two-col{display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-bottom:12px}
+.card{background:#fff;border:0.5px solid #d9d9d0;border-radius:12px;padding:1.25rem}
+.card-title{font-size:10px;font-weight:500;color:#888880;margin-bottom:1rem;text-transform:uppercase;letter-spacing:0.07em}
+.chart-wrap{position:relative;height:190px;margin-top:4px}
+canvas{width:100%!important;height:100%!important}
+.bar-row{display:flex;align-items:center;gap:10px;margin-bottom:10px}
+.bar-label{font-size:12px;color:#333;width:130px;flex-shrink:0;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.bar-wrap{flex:1;height:5px;background:#f0f0ec;border-radius:3px;overflow:hidden}
+.bar-fill{height:100%;border-radius:3px;transition:width .6s ease}
+.bar-val{font-size:11px;color:#666;width:44px;text-align:right;flex-shrink:0;font-variant-numeric:tabular-nums}
+.day-table{width:100%;border-collapse:collapse}
+.day-table th{font-size:10px;text-transform:uppercase;letter-spacing:0.06em;color:#aaa;text-align:left;padding:0 0 8px;border-bottom:0.5px solid #e8e8e2;font-weight:400}
+.day-table td{font-size:13px;padding:9px 0;border-bottom:0.5px solid #f0f0ec;color:#1a1a18}
+.day-table tr:last-child td{border-bottom:none}
+.day-table .num{font-variant-numeric:tabular-nums;text-align:right}
+.pos{color:#3B6D11}
+.neg{color:#A32D2D}
+.tag{display:inline-block;font-size:10px;padding:2px 8px;border-radius:10px;font-weight:500}
+.tag-ok{background:#EAF3DE;color:#27500A}
+.tag-no{background:#FCEBEB;color:#A32D2D}
+.tag-zero{background:#f0f0ec;color:#666660}
+.tab-row{display:flex;gap:6px;margin-bottom:1.25rem;flex-wrap:wrap}
+.tab-btn{padding:7px 16px;font-size:13px;border-radius:8px;border:0.5px solid #d9d9d0;background:transparent;color:#666;cursor:pointer;font-family:inherit;transition:all 0.15s}
+.tab-btn:hover{background:#f5f5f2;color:#333}
+.tab-btn.on{background:#f0f0ec;color:#1a1a18;font-weight:500;border-color:#c0c0b8}
+.full-card{background:#fff;border:0.5px solid #d9d9d0;border-radius:12px;padding:1.25rem;margin-bottom:12px}
+.search-input{width:100%;padding:8px 14px;border:0.5px solid #d9d9d0;border-radius:8px;font-size:13px;font-family:inherit;background:#fff;color:#1a1a18;margin-bottom:1rem;outline:none;transition:border-color .15s}
+.search-input:focus{border-color:#97C459}
+.prod-table{width:100%;border-collapse:collapse;font-size:13px}
+.prod-table th{text-align:left;padding:7px 10px;font-size:10px;text-transform:uppercase;letter-spacing:0.06em;color:#aaa;border-bottom:0.5px solid #e8e8e2;font-weight:400}
+.prod-table td{padding:9px 10px;border-bottom:0.5px solid #f5f5f2;color:#1a1a18;transition:background .12s}
+.prod-table tr:hover td{background:#fafaf7}
+.prod-table tr:last-child td{border-bottom:none}
+.mini-bar{width:44px;height:4px;background:#f0f0ec;border-radius:2px;display:inline-block;vertical-align:middle;margin-left:6px;overflow:hidden}
+.mini-fill{height:100%;border-radius:2px}
+.pag-hidden{display:none}
+.sal-row{display:flex;justify-content:space-between;align-items:center;padding:10px 0;border-bottom:0.5px solid #f0f0ec;flex-wrap:wrap;gap:6px}
+.sal-row:last-child{border-bottom:none}
+.avatar{width:34px;height:34px;border-radius:50%;display:inline-flex;align-items:center;justify-content:center;font-size:12px;font-weight:600;flex-shrink:0}
+.info-grid{display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-bottom:12px}
+@media(max-width:500px){.info-grid{grid-template-columns:1fr}}
+.usd-badge{display:inline-flex;align-items:center;gap:6px;padding:4px 10px;border-radius:12px;font-size:11px;font-weight:500}
+.footer{margin-top:2.5rem;padding-top:1rem;border-top:0.5px solid #d9d9d0;font-size:11px;color:#aaa;display:flex;justify-content:space-between;flex-wrap:wrap;gap:6px}
+</style>
+</head>
+<body>
+
+<div class="shell">
+
+  <div class="top-bar">
+    <div class="brand">Conta<em>2026</em></div>
+    <div style="display:flex;align-items:center;gap:12px;flex-wrap:wrap">
+      <span class="usd-badge" style="background:#EAF3DE;color:#27500A">USD = 515 CUP</span>
+      <span class="usd-badge" style="background:#E6F1FB;color:#185FA5">MLC = 400 CUP</span>
+      <div class="header-meta">Período: 23 Mar – 2 Abr 2026<br>6 fechas · 36 productos</div>
+    </div>
+  </div>
+
+  <div class="period-pills">
+    <span class="pill on" onclick="setPeriod('all',this)">Todos los períodos</span>
+    <span class="pill" onclick="setPeriod('23-3-26',this)">23 Mar</span>
+    <span class="pill" onclick="setPeriod('29-3-26',this)">29 Mar</span>
+    <span class="pill" onclick="setPeriod('30-3-26',this)">30 Mar</span>
+    <span class="pill" onclick="setPeriod('31-3-26',this)">31 Mar</span>
+    <span class="pill" onclick="setPeriod('1-4-26',this)">1 Abr</span>
+    <span class="pill" onclick="setPeriod('2-4-26',this)">2 Abr</span>
+  </div>
+
+  <div class="kpis">
+    <div class="kpi"><div class="kpi-accent" style="background:#639922"></div><div class="kpi-lbl">Venta total</div><div class="kpi-val" id="k-venta">—</div><div class="kpi-sub">CUP acumulado</div></div>
+    <div class="kpi"><div class="kpi-accent" style="background:#D85A30"></div><div class="kpi-lbl">Inversión</div><div class="kpi-val" id="k-inv">—</div><div class="kpi-sub">CUP mercancía</div></div>
+    <div class="kpi"><div class="kpi-accent" style="background:#185FA5"></div><div class="kpi-lbl">Ganancia neta</div><div class="kpi-val" id="k-neta">—</div><div class="kpi-sub">tras 20% s/ventas</div></div>
+    <div class="kpi"><div class="kpi-accent" style="background:#3B6D11"></div><div class="kpi-lbl">Margen catálogo</div><div class="kpi-val" style="color:#3B6D11">33.6%</div><div class="kpi-sub">promedio neto</div></div>
+  </div>
+
+  <div class="tab-row">
+    <button class="tab-btn on" onclick="showPage('p-overview',this)">Visión general</button>
+    <button class="tab-btn" onclick="showPage('p-products',this)">Productos</button>
+    <button class="tab-btn" onclick="showPage('p-personal',this)">Personal</button>
+  </div>
+
+  <!-- OVERVIEW -->
+  <div id="p-overview">
+    <div class="two-col">
+      <div class="card">
+        <div class="card-title">Ventas vs Inversión por período</div>
+        <div class="chart-wrap"><canvas id="c1"></canvas></div>
+      </div>
+      <div class="card">
+        <div class="card-title">Ganancia neta por período</div>
+        <div class="chart-wrap"><canvas id="c2"></canvas></div>
+      </div>
+    </div>
+    <div class="two-col">
+      <div class="card">
+        <div class="card-title">Resumen por período</div>
+        <table class="day-table">
+          <thead><tr><th>Fecha</th><th class="num">Venta</th><th class="num">Neta</th><th>Estado</th></tr></thead>
+          <tbody id="dtbody"></tbody>
+        </table>
+      </div>
+      <div class="card">
+        <div class="card-title">Top 6 — mayor margen %</div>
+        <div id="top-margen"></div>
+      </div>
+    </div>
+  </div>
+
+  <!-- PRODUCTS -->
+  <div id="p-products" class="pag-hidden">
+    <div class="full-card">
+      <input class="search-input" type="text" placeholder="Buscar producto..." id="srch" oninput="filterProds()">
+      <div style="overflow-x:auto">
+        <table class="prod-table">
+          <thead><tr><th>#</th><th>Producto</th><th>Precio venta</th><th>Ganancia neta</th><th>Margen %</th></tr></thead>
+          <tbody id="prod-body"></tbody>
+        </table>
+      </div>
+    </div>
+  </div>
+
+  <!-- PERSONAL -->
+  <div id="p-personal" class="pag-hidden">
+    <div class="info-grid">
+      <div class="card" style="display:flex;flex-direction:column;align-items:center;text-align:center;gap:10px;padding:1.5rem">
+        <div class="avatar" style="background:#EEEDFE;color:#3C3489;width:46px;height:46px;font-size:15px;">DA</div>
+        <div style="font-weight:500;font-size:15px">Danay</div>
+        <div style="font-size:30px;font-weight:600;letter-spacing:-0.03em;color:#3C3489" id="s-danay">—</div>
+        <div style="font-size:11px;color:#aaa">CUP acumulado</div>
+      </div>
+      <div class="card" style="display:flex;flex-direction:column;align-items:center;text-align:center;gap:10px;padding:1.5rem">
+        <div class="avatar" style="background:#FAECE7;color:#993C1D;width:46px;height:46px;font-size:15px;">DY</div>
+        <div style="font-weight:500;font-size:15px">Dayan</div>
+        <div style="font-size:30px;font-weight:600;letter-spacing:-0.03em;color:#993C1D" id="s-dayan">—</div>
+        <div style="font-size:11px;color:#aaa">CUP acumulado</div>
+      </div>
+    </div>
+    <div class="full-card">
+      <div class="card-title">Desglose de salarios por período</div>
+      <div id="sal-list"></div>
+    </div>
+    <div class="card" style="margin-top:12px">
+      <div class="card-title">Evolución salarial</div>
+      <div class="chart-wrap"><canvas id="c3"></canvas></div>
+    </div>
+  </div>
+
+  <div class="footer">
+    <span>Conta2026 Dashboard · Generado automáticamente</span>
+    <span>USD 515 CUP · MLC 400 CUP</span>
+  </div>
+
+</div>
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.min.js"></script>
+<script>
+const DAILY=[
+  {f:'23-3-26',lb:'23 Mar',v:0,inv:0,g:-6409,n:-5127.2,sD:-640.9,sY:-640.9},
+  {f:'29-3-26',lb:'29 Mar',v:0,inv:0,g:-6409,n:-5127.2,sD:-640.9,sY:-640.9},
+  {f:'30-3-26',lb:'30 Mar',v:198400,inv:105373.4,g:86617.6,n:69294.08,sD:8661.76,sY:8661.76},
+  {f:'31-3-26',lb:'31 Mar',v:280000,inv:141237.5,g:132353.5,n:105882.8,sD:13235.35,sY:13235.35},
+  {f:'1-4-26',lb:'1 Abr',v:100000,inv:53087.5,g:40503.5,n:32402.8,sD:4050.35,sY:4050.35},
+  {f:'2-4-26',lb:'2 Abr',v:100000,inv:53087.5,g:40503.5,n:32402.8,sD:4050.35,sY:4050.35}
+];
+
+const PRODS=[
+  {n:'Pulóver Blanco Dri-Fit',p:2000,gn:750.6,m:37.5},
+  {n:'Pulóver blanco niño(1-10)',p:1800,gn:734.8,m:40.8},
+  {n:'Jarras de Cristal 16oz',p:3000,gn:877.4,m:29.2},
+  {n:'Losa 20x20 con soporte',p:1600,gn:558.8,m:34.9},
+  {n:'Losa 15x15 con soporte',p:1300,gn:439.4,m:33.8},
+  {n:'Losa 10x10 con soporte',p:1200,gn:739.7,m:61.6},
+  {n:'Jarra 11oz',p:1300,gn:354.67,m:27.3},
+  {n:'Gorra',p:2000,gn:725.48,m:36.3},
+  {n:'Jaba de Tela',p:1200,gn:515.2,m:42.9},
+  {n:'Llaveros de Acrílico c/ herraje',p:400,gn:173.88,m:43.5},
+  {n:'Mauspad',p:1000,gn:514,m:51.4},
+  {n:'Botellas de Aluminio',p:2500,gn:484.27,m:19.4},
+  {n:'Enguatadas',p:2200,gn:645.2,m:29.3},
+  {n:'Portacelular',p:1200,gn:477,m:39.8},
+  {n:'Pomos de Aluminio',p:2800,gn:511.4,m:18.3},
+  {n:'Tazas de Café',p:1500,gn:669.48,m:44.6},
+  {n:'Pomos Deportivos 750ml',p:3500,gn:658.8,m:18.8},
+  {n:'Jarra Mágica',p:1300,gn:532.67,m:41.0},
+  {n:'Jarras Térmicas',p:3200,gn:432.67,m:13.5},
+  {n:'Pulóver Blanco Poliespandex',p:2400,gn:722.8,m:30.1},
+  {n:'Delantal Negro c/ vinil textil',p:2000,gn:777.2,m:38.9},
+  {n:'Propio Vinil logo',p:500,gn:231.25,m:46.2},
+  {n:'Propio Vinil A4',p:900,gn:422.5,m:46.9},
+  {n:'Propio Sublimación',p:400,gn:232.8,m:58.2},
+  {n:'Monederos',p:700,gn:228,m:32.6},
+  {n:'Fotorrocas',p:2300,gn:478,m:20.8},
+  {n:'Cojines',p:2100,gn:595.2,m:28.3},
+  {n:'Pulóver Colores c/ Vinil Textil',p:2200,gn:669.4,m:30.4},
+  {n:'Pulóver Negro Poliespandex',p:2400,gn:871.6,m:36.3},
+  {n:'Pulóver Beige Poliespandex',p:2400,gn:1072.8,m:44.7},
+  {n:'Pop Sockets',p:1000,gn:349.48,m:34.9},
+  {n:'Imanes',p:1100,gn:404.23,m:36.7},
+  {n:'P. Color c/ vinil sublimable',p:2700,gn:607.76,m:22.5},
+  {n:'Delantal c/ Vinil Sublimable',p:2200,gn:532.76,m:24.2},
+  {n:'Propio Vinil Textil Sublimable',p:1500,gn:425.96,m:28.4},
+  {n:'Bolsos Grandes',p:3000,gn:674,m:22.5}
+];
+
+const fmt=n=>Math.round(n).toLocaleString('es-ES');
+let currentPeriod='all';
+let charts={};
+
+function getData(){return currentPeriod==='all'?DAILY:DAILY.filter(d=>d.f===currentPeriod);}
+function agg(data){return{v:data.reduce((s,d)=>s+d.v,0),inv:data.reduce((s,d)=>s+d.inv,0),n:data.reduce((s,d)=>s+d.n,0),sD:data.reduce((s,d)=>s+d.sD,0),sY:data.reduce((s,d)=>s+d.sY,0)};}
+
+function setPeriod(p,el){
+  currentPeriod=p;
+  document.querySelectorAll('.pill').forEach(x=>x.classList.remove('on'));
+  el.classList.add('on');
+  refresh();
+}
+
+function refresh(){
+  const data=getData();
+  const a=agg(data);
+  document.getElementById('k-venta').textContent=fmt(a.v);
+  document.getElementById('k-inv').textContent=fmt(a.inv);
+  const ne=document.getElementById('k-neta');
+  ne.textContent=fmt(a.n);
+  ne.style.color=a.n>=0?'#3B6D11':'#A32D2D';
+  renderTable(data);
+  renderCharts(data);
+  renderTop();
+  renderSal(data,a);
+}
+
+function renderTable(data){
+  document.getElementById('dtbody').innerHTML=data.map(d=>{
+    const tag=d.v===0?'<span class="tag tag-zero">Sin venta</span>':d.n>=0?'<span class="tag tag-ok">Positivo</span>':'<span class="tag tag-no">Pérdida</span>';
+    return `<tr><td style="font-weight:500">${d.lb}</td><td class="num">${fmt(d.v)}</td><td class="num ${d.n>=0?'pos':'neg'}">${fmt(d.n)}</td><td>${tag}</td></tr>`;
+  }).join('');
+}
+
+const COPTS={
+  responsive:true,maintainAspectRatio:false,
+  plugins:{legend:{labels:{font:{size:10,family:'Inter'},color:'#888880',boxWidth:10}},tooltip:{backgroundColor:'#fff',borderColor:'#d9d9d0',borderWidth:1,titleColor:'#1a1a18',bodyColor:'#666',padding:10,boxShadow:'0 2px 8px rgba(0,0,0,0.08)'}},
+  scales:{x:{grid:{display:false},ticks:{color:'#aaa',font:{size:10}}},y:{grid:{color:'#f0f0ec'},ticks:{color:'#aaa',font:{size:10},callback:v=>fmt(v/1000)+'k'}}}
+};
+
+function renderCharts(data){
+  const labs=data.map(d=>d.lb);
+  ['c1','c2'].forEach(id=>{if(charts[id])charts[id].destroy();});
+  charts.c1=new Chart(document.getElementById('c1'),{
+    type:'bar',
+    data:{labels:labs,datasets:[
+      {label:'Venta',data:data.map(d=>d.v),backgroundColor:'#97C459',borderRadius:5},
+      {label:'Inversión',data:data.map(d=>d.inv),backgroundColor:'#F09595',borderRadius:5}
+    ]},options:COPTS
+  });
+  charts.c2=new Chart(document.getElementById('c2'),{
+    type:'line',
+    data:{labels:labs,datasets:[{
+      label:'Ganancia neta',data:data.map(d=>d.n),
+      borderColor:'#185FA5',backgroundColor:'rgba(55,138,221,0.07)',
+      tension:0.4,fill:true,pointBackgroundColor:'#185FA5',pointRadius:4,pointHoverRadius:7
+    }]},options:COPTS
+  });
+}
+
+function renderTop(){
+  const top=[...PRODS].sort((a,b)=>b.m-a.m).slice(0,6);
+  const mx=Math.max(...top.map(p=>p.m));
+  document.getElementById('top-margen').innerHTML=top.map(p=>{
+    const col=p.m>=40?'#639922':p.m>=25?'#BA7517':'#993C1D';
+    const w=Math.round(p.m/mx*100);
+    const lbl=p.n.length>22?p.n.slice(0,20)+'…':p.n;
+    return `<div class="bar-row"><span class="bar-label" title="${p.n}">${lbl}</span><div class="bar-wrap"><div class="bar-fill" style="width:${w}%;background:${col}"></div></div><span class="bar-val" style="color:${col}">${p.m.toFixed(1)}%</span></div>`;
+  }).join('');
+}
+
+function filterProds(){
+  const q=document.getElementById('srch').value.toLowerCase();
+  const list=[...PRODS].filter(p=>p.n.toLowerCase().includes(q)).sort((a,b)=>b.m-a.m);
+  document.getElementById('prod-body').innerHTML=list.map((p,i)=>{
+    const col=p.m>=40?'#639922':p.m>=25?'#BA7517':'#993C1D';
+    return `<tr><td style="color:#aaa;font-size:11px">${i+1}</td><td style="font-weight:500">${p.n}</td><td style="font-variant-numeric:tabular-nums">${fmt(p.p)}</td><td class="pos" style="font-variant-numeric:tabular-nums">${fmt(p.gn)}</td><td><span style="color:${col};font-weight:500;font-size:12px">${p.m.toFixed(1)}%</span><span class="mini-bar"><span class="mini-fill" style="width:${Math.round(p.m)}%;background:${col}"></span></span></td></tr>`;
+  }).join('');
+}
+
+function renderSal(data,a){
+  document.getElementById('s-danay').textContent=fmt(a.sD);
+  document.getElementById('s-dayan').textContent=fmt(a.sY);
+  document.getElementById('sal-list').innerHTML=data.map(d=>{
+    const tot=(d.sD||0)+(d.sY||0);
+    const p=d.n>0?Math.round(tot/d.n*100):0;
+    return `<div class="sal-row"><span style="font-size:13px;font-weight:500">${d.lb}</span><span style="font-size:12px;color:#666">Danay: ${fmt(d.sD)} · Dayan: ${fmt(d.sY)}</span><span style="font-size:11px;color:#aaa">${p}% s/neta</span></div>`;
+  }).join('');
+
+  if(charts.c3)charts.c3.destroy();
+  const labs=data.map(d=>d.lb);
+  charts.c3=new Chart(document.getElementById('c3'),{
+    type:'bar',
+    data:{labels:labs,datasets:[
+      {label:'Danay',data:data.map(d=>d.sD||0),backgroundColor:'#AFA9EC',borderRadius:5},
+      {label:'Dayan',data:data.map(d=>d.sY||0),backgroundColor:'#F0997B',borderRadius:5}
+    ]},options:COPTS
+  });
+}
+
+function showPage(id,btn){
+  ['p-overview','p-products','p-personal'].forEach(p=>{
+    document.getElementById(p).className=p===id?'':'pag-hidden';
+  });
+  document.querySelectorAll('.tab-btn').forEach(b=>b.classList.remove('on'));
+  btn.classList.add('on');
+  if(id==='p-products')filterProds();
+  if(id==='p-personal')renderSal(getData(),agg(getData()));
+}
+
+refresh();
+</script>
+</body>
+</html>

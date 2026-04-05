@@ -1,0 +1,125 @@
+{
+  "name": "Bot Telegram - Contabilidad DTAR",
+  "nodes": [
+    {
+      "parameters": {
+        "updates": ["message"],
+        "additionalFields": {}
+      },
+      "id": "node-telegram-trigger",
+      "name": "Telegram Trigger",
+      "type": "n8n-nodes-base.telegramTrigger",
+      "typeVersion": 1.1,
+      "position": [240, 300],
+      "webhookId": "bot-contabilidad-dtar"
+    },
+    {
+      "parameters": {
+        "promptType": "define",
+        "text": "={{ $json.message.text }}",
+        "options": {
+          "systemMessage": "Eres un asistente interno de negocio para DTAR, un negocio de sublimación y personalización de productos.\n\nTu rol es ayudar a los TRABAJADORES (no clientes) con:\n1. Registrar ventas del día en Google Sheets\n2. Consultar precios, costos y ganancias de productos\n3. Responder cualquier pregunta sobre el negocio\n4. Ver resúmenes de ventas\n\nProductos y precios de venta (en CUP):\n- Pulóver Blanco Dri-Fit: 2000\n- Pulóver Blanco Niño: 1800\n- Pulóver Poliéster Blanco: consultar sheet\n- Pulóver Poliéster Niño: consultar sheet\n- Pulóver Poliéster Beige: consultar sheet\n- Pulóver Color c/vinil sublim: consultar sheet\n- Pulóver Color c/vinil textil: consultar sheet\n- Jarra de Cristal 16oz: 3000\n- Losa 10: consultar sheet\n- Losa 20: consultar sheet\n- Losa 15: consultar sheet\n- Jarra 11oz: consultar sheet\n- Gorra: consultar sheet\n- Jaba de Tela: consultar sheet\n- Bolso Grande: consultar sheet\n- Llavero: consultar sheet\n- Jarra Mágica: consultar sheet\n- Mousepad: consultar sheet\n- Botella Aluminio: consultar sheet\n- Enguatadas: consultar sheet\n- Portacelular: consultar sheet\n- Tazas de Café: consultar sheet\n- Pomos 750ml: consultar sheet\n- Jarras Térmicas: consultar sheet\n- Pomo c/Absorbente: consultar sheet\n- Delantal Vinil/Sublim: consultar sheet\n- Delantal Vinil/Textil: consultar sheet\n- Monedero: consultar sheet\n- Cojín: consultar sheet\n- PopSocket: consultar sheet\n- Fotorroca: consultar sheet\n- Imán: consultar sheet\n- Vinil Logo: consultar sheet\n- Vinil Sublimación: consultar sheet\n- Vinil Textil: consultar sheet\n- Sublimación general: consultar sheet\n\nMonedas de referencia: USD=515 CUP, MLC=400 CUP\n\nCuando el trabajador indique una venta, usa la herramienta de Google Sheets para registrar las cantidades en la hoja del día de hoy (formato: D-M-AA, ej: {{ $now.format('d-M-yy') }}).\n\nResponde siempre en español, de forma clara y concisa."
+        }
+      },
+      "id": "node-ai-agent",
+      "name": "AI Agent",
+      "type": "@n8n/n8n-nodes-langchain.agent",
+      "typeVersion": 1.7,
+      "position": [460, 300]
+    },
+    {
+      "parameters": {
+        "model": "claude-sonnet-4-6",
+        "options": {
+          "maxTokensToSample": 1024
+        }
+      },
+      "id": "node-claude",
+      "name": "Claude Opus",
+      "type": "@n8n/n8n-nodes-langchain.lmChatAnthropic",
+      "typeVersion": 1.3,
+      "position": [340, 520]
+    },
+    {
+      "parameters": {
+        "contextWindowLength": 20
+      },
+      "id": "node-memory",
+      "name": "Memoria Conversación",
+      "type": "@n8n/n8n-nodes-langchain.memoryBufferWindow",
+      "typeVersion": 1.3,
+      "position": [560, 520]
+    },
+    {
+      "parameters": {
+        "operation": "appendOrUpdate",
+        "documentId": {
+          "__rl": true,
+          "mode": "id",
+          "value": "1g8lR3i_ex5scINzYoUA_hHM2ImaQ4Tg642MOTVvJ77Y"
+        },
+        "sheetName": {
+          "__rl": true,
+          "mode": "name",
+          "value": "={{ $now.format('d-M-yy') }}"
+        },
+        "columns": {
+          "mappingMode": "defineBelow",
+          "value": {}
+        },
+        "options": {}
+      },
+      "id": "node-google-sheets",
+      "name": "Google Sheets",
+      "type": "n8n-nodes-base.googleSheets",
+      "typeVersion": 4.5,
+      "position": [760, 520]
+    },
+    {
+      "parameters": {
+        "chatId": "={{ $('Telegram Trigger').item.json.message.chat.id }}",
+        "text": "={{ $json.output }}",
+        "additionalFields": {
+          "parse_mode": "Markdown"
+        }
+      },
+      "id": "node-telegram-send",
+      "name": "Responder por Telegram",
+      "type": "n8n-nodes-base.telegram",
+      "typeVersion": 1.2,
+      "position": [680, 300]
+    }
+  ],
+  "connections": {
+    "Telegram Trigger": {
+      "main": [
+        [{"node": "AI Agent", "type": "main", "index": 0}]
+      ]
+    },
+    "Claude Opus": {
+      "ai_languageModel": [
+        [{"node": "AI Agent", "type": "ai_languageModel", "index": 0}]
+      ]
+    },
+    "Memoria Conversación": {
+      "ai_memory": [
+        [{"node": "AI Agent", "type": "ai_memory", "index": 0}]
+      ]
+    },
+    "AI Agent": {
+      "main": [
+        [{"node": "Responder por Telegram", "type": "main", "index": 0}]
+      ]
+    },
+    "Google Sheets": {
+      "ai_tool": [
+        [{"node": "AI Agent", "type": "ai_tool", "index": 0}]
+      ]
+    }
+  },
+  "active": false,
+  "settings": {
+    "executionOrder": "v1"
+  },
+  "tags": []
+}
