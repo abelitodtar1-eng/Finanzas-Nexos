@@ -1,620 +1,783 @@
 <!DOCTYPE html>
 <html lang="es">
 <head>
-<meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>FinanzasNexos — Dashboard</title>
-<link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500&family=IBM+Plex+Sans:wght@300;400;500&display=swap" rel="stylesheet">
-<style>
-  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
-  html, body { height: 100%; background: #080a0e; color: #e8eaf0; font-family: 'IBM Plex Sans', sans-serif; }
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Finanzas Nexos — Dashboard</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;600;700&family=IBM+Plex+Sans:wght@400;600;700&display=swap" rel="stylesheet">
+  <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
+  <style>
+    :root {
+      --bg:      #080a0e;
+      --card:    #0d0f14;
+      --border:  #1e2430;
+      --accent:  #00d4aa;
+      --green:   #00d4aa;
+      --red:     #e05c5c;
+      --yellow:  #ffd166;
+      --text:    #e8eaf0;
+      --muted:   #8899aa;
+      --radius:  8px;
+    }
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    body {
+      background: var(--bg);
+      color: var(--text);
+      font-family: 'IBM Plex Sans', system-ui, sans-serif;
+      min-height: 100vh;
+    }
 
-  .app { display: flex; height: 100vh; overflow: hidden; }
-  .sidebar { width: 210px; background: #080a0e; border-right: 1px solid #1e2430; display: flex; flex-direction: column; flex-shrink: 0; }
-  .main { flex: 1; display: flex; flex-direction: column; overflow: hidden; background: #0d0f14; }
-  .topbar { background: #0d0f14; border-bottom: 1px solid #1e2430; padding: 12px 20px; display: flex; justify-content: space-between; align-items: center; flex-shrink: 0; gap: 10px; }
-  .content { flex: 1; overflow-y: auto; padding: 18px 20px; }
+    /* ── Header ── */
+    header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 18px 32px;
+      border-bottom: 1px solid var(--border);
+      background: var(--card);
+    }
+    header h1 { font-size: 1.2rem; font-weight: 700; }
+    header h1 span { color: var(--accent); }
+    .header-right { display: flex; align-items: center; gap: 12px; }
+    #fecha-hoy { color: var(--muted); font-size: 0.82rem; }
+    .badge {
+      background: var(--accent);
+      color: #080a0e;
+      font-size: 0.68rem;
+      font-weight: 700;
+      padding: 3px 10px;
+      border-radius: 20px;
+      letter-spacing: .5px;
+    }
+    .badge.demo { background: var(--muted); color: #fff; }
 
-  /* Sidebar */
-  .logo { padding: 18px 16px; border-bottom: 1px solid #1e2430; }
-  .logo-text { font-family: 'IBM Plex Mono', monospace; font-size: 14px; color: #00d4aa; letter-spacing: 3px; font-weight: 500; }
-  .logo-sub { font-size: 10px; color: #2a3245; letter-spacing: 1px; margin-top: 4px; }
-  .nav { padding: 12px 0; flex: 1; }
-  .nav-section { font-size: 9px; color: #2a3245; letter-spacing: 2px; padding: 8px 16px 4px; text-transform: uppercase; }
-  .nav-item { display: flex; align-items: center; gap: 10px; padding: 9px 16px; font-size: 12px; color: #4a5568; cursor: pointer; transition: all 0.15s; border-left: 2px solid transparent; user-select: none; }
-  .nav-item:hover { color: #8899aa; background: rgba(255,255,255,0.02); }
-  .nav-item.active { color: #00d4aa; background: rgba(0,212,170,0.06); border-left-color: #00d4aa; }
-  .nav-dot { width: 5px; height: 5px; border-radius: 50%; background: currentColor; flex-shrink: 0; }
-  .sidebar-footer { padding: 14px 16px; border-top: 1px solid #1e2430; }
-  .rate-line { font-family: 'IBM Plex Mono', monospace; font-size: 10px; color: #3a4255; line-height: 1.9; }
+    /* ── Tabs ── */
+    .tabs {
+      display: flex;
+      gap: 2px;
+      padding: 16px 32px 0;
+      border-bottom: 1px solid var(--border);
+      background: var(--card);
+    }
+    .tab {
+      padding: 8px 20px;
+      cursor: pointer;
+      font-size: 0.85rem;
+      font-weight: 600;
+      color: var(--muted);
+      background: transparent;
+      border: none;
+      border-bottom: 2px solid transparent;
+      margin-bottom: -1px;
+      transition: all .18s;
+    }
+    .tab.active { color: var(--accent); border-bottom-color: var(--accent); }
+    .tab:hover:not(.active) { color: var(--text); }
 
-  /* Topbar */
-  .page-title { font-family: 'IBM Plex Mono', monospace; font-size: 11px; color: #3a4255; letter-spacing: 2px; text-transform: uppercase; white-space: nowrap; }
-  .topbar-right { display: flex; gap: 8px; align-items: center; flex-wrap: wrap; }
-  .badge { background: rgba(0,212,170,0.08); color: #00d4aa; font-size: 10px; padding: 3px 10px; border-radius: 4px; border: 1px solid rgba(0,212,170,0.15); font-family: 'IBM Plex Mono', monospace; white-space: nowrap; }
-  .badge.gray { background: rgba(255,255,255,0.04); color: #4a5568; border-color: #1e2430; }
+    /* ── Loading ── */
+    .loading-wrap {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 10px;
+      padding: 60px;
+      color: var(--muted);
+      font-size: 0.85rem;
+    }
+    .spinner {
+      width: 18px; height: 18px;
+      border: 2px solid var(--border);
+      border-top-color: var(--accent);
+      border-radius: 50%;
+      animation: spin .7s linear infinite;
+    }
+    @keyframes spin { to { transform: rotate(360deg); } }
 
-  /* Month nav */
-  .month-nav { display: flex; align-items: center; gap: 8px; }
-  .month-btn { background: rgba(255,255,255,0.04); border: 1px solid #1e2430; color: #4a5568; width: 24px; height: 24px; border-radius: 4px; cursor: pointer; font-size: 12px; display: flex; align-items: center; justify-content: center; transition: all 0.15s; }
-  .month-btn:hover { color: #8899aa; border-color: #2a3a50; }
-  .month-label { font-family: 'IBM Plex Mono', monospace; font-size: 10px; color: #8899aa; letter-spacing: 1px; min-width: 80px; text-align: center; }
+    /* ── Main ── */
+    main { padding: 24px 32px; }
+    .view { display: none; }
+    .view.active { display: block; }
 
-  /* Period pills */
-  .period-bar { padding: 4px 0 14px; display: flex; gap: 6px; flex-wrap: wrap; }
-  .pill { padding: 4px 12px; border-radius: 4px; font-size: 10px; cursor: pointer; border: 1px solid #1e2430; background: transparent; color: #3a4255; font-family: 'IBM Plex Mono', monospace; letter-spacing: 0.5px; transition: all 0.15s; }
-  .pill:hover { border-color: #2a3a50; color: #8899aa; }
-  .pill.on { background: rgba(0,212,170,0.08); color: #00d4aa; border-color: rgba(0,212,170,0.2); }
+    /* ── KPI Cards ── */
+    .kpi-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+      gap: 14px;
+      margin-bottom: 20px;
+    }
+    .kpi {
+      background: var(--card);
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      padding: 18px 22px;
+      position: relative;
+      overflow: hidden;
+    }
+    .kpi::before {
+      content: '';
+      position: absolute;
+      top: 0; left: 0; right: 0;
+      height: 3px;
+      background: var(--kpi-color, var(--accent));
+    }
+    .kpi-label { font-size: 0.72rem; color: var(--muted); text-transform: uppercase; letter-spacing: .7px; margin-bottom: 8px; }
+    .kpi-value { font-size: 1.65rem; font-weight: 700; font-family: 'IBM Plex Mono', monospace; }
+    .kpi-sub { font-size: 0.76rem; color: var(--muted); margin-top: 4px; }
+    .kpi-icon { position: absolute; right: 14px; top: 14px; font-size: 1.5rem; opacity: .12; }
 
-  /* KPI */
-  .kpi-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 10px; margin-bottom: 14px; }
-  .kpi-card { background: #111420; border: 1px solid #1e2430; border-radius: 8px; padding: 16px; }
-  .kpi-label { font-family: 'IBM Plex Mono', monospace; font-size: 9px; color: #2a3245; letter-spacing: 2px; text-transform: uppercase; margin-bottom: 10px; }
-  .kpi-value { font-family: 'IBM Plex Mono', monospace; font-size: 24px; font-weight: 500; color: #e8eaf0; line-height: 1; }
-  .kpi-value.green { color: #00d4aa; }
-  .kpi-value.red { color: #e05c5c; }
-  .kpi-sub { font-size: 10px; color: #2a3245; margin-top: 6px; }
+    /* ── Charts ── */
+    .charts-grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 14px;
+      margin-bottom: 20px;
+    }
+    @media (max-width: 900px) { .charts-grid { grid-template-columns: 1fr; } }
+    .chart-card {
+      background: var(--card);
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      padding: 18px;
+    }
+    .chart-card h3 {
+      font-size: 0.75rem;
+      color: var(--muted);
+      text-transform: uppercase;
+      letter-spacing: .6px;
+      margin-bottom: 14px;
+    }
+    .chart-wrap { position: relative; height: 240px; }
 
-  /* Tab bar (mobile) */
-  .tab-bar { display: none; gap: 2px; margin-bottom: 16px; }
-  .tab { padding: 6px 14px; font-size: 11px; color: #3a4255; border-radius: 4px; cursor: pointer; transition: all 0.15s; background: transparent; border: none; }
-  .tab.active { background: rgba(0,212,170,0.08); color: #00d4aa; }
-  .tab:hover:not(.active) { color: #8899aa; }
+    /* ── Table ── */
+    .table-card {
+      background: var(--card);
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      padding: 18px;
+    }
+    .table-header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      margin-bottom: 14px;
+    }
+    .table-header h3 { font-size: 0.75rem; color: var(--muted); text-transform: uppercase; letter-spacing: .6px; }
+    .search-box {
+      background: var(--bg);
+      border: 1px solid var(--border);
+      border-radius: 6px;
+      padding: 5px 12px;
+      color: var(--text);
+      font-size: 0.82rem;
+      width: 190px;
+      outline: none;
+      font-family: inherit;
+    }
+    .search-box:focus { border-color: var(--accent); }
+    table { width: 100%; border-collapse: collapse; font-size: 0.83rem; }
+    th {
+      text-align: left;
+      padding: 9px 10px;
+      color: var(--muted);
+      font-size: 0.72rem;
+      text-transform: uppercase;
+      letter-spacing: .5px;
+      border-bottom: 1px solid var(--border);
+      cursor: pointer;
+      user-select: none;
+      white-space: nowrap;
+      font-family: 'IBM Plex Mono', monospace;
+    }
+    th:hover { color: var(--text); }
+    th .sort-icon { margin-left: 4px; opacity: .4; }
+    th.sorted .sort-icon { opacity: 1; color: var(--accent); }
+    td { padding: 9px 10px; border-bottom: 1px solid var(--border); font-family: 'IBM Plex Mono', monospace; font-size: 0.82rem; }
+    td.name { font-family: 'IBM Plex Sans', sans-serif; color: var(--text); }
+    tr:last-child td { border-bottom: none; }
+    tr:hover td { background: rgba(255,255,255,.025); }
+    .num { text-align: right; }
+    .pill {
+      display: inline-block;
+      padding: 2px 9px;
+      border-radius: 20px;
+      font-size: 0.72rem;
+      font-weight: 600;
+      font-family: 'IBM Plex Sans', sans-serif;
+    }
+    .pill-green  { background: rgba(0,212,170,.15);  color: var(--green); }
+    .pill-yellow { background: rgba(255,209,102,.15); color: var(--yellow); }
+    .pill-red    { background: rgba(224,92,92,.15);   color: var(--red); }
 
-  /* Panels */
-  .panel { background: #111420; border: 1px solid #1e2430; border-radius: 8px; padding: 16px; }
-  .panel-title { font-family: 'IBM Plex Mono', monospace; font-size: 9px; color: #3a4255; letter-spacing: 2px; text-transform: uppercase; margin-bottom: 14px; }
-  .panel-row { display: grid; grid-template-columns: 2fr 1fr; gap: 10px; margin-bottom: 14px; }
+    /* ── Week nav ── */
+    .week-nav {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      margin-bottom: 18px;
+    }
+    .week-nav button {
+      background: var(--card);
+      border: 1px solid var(--border);
+      color: var(--text);
+      border-radius: 6px;
+      padding: 5px 14px;
+      cursor: pointer;
+      font-size: 0.82rem;
+      font-family: inherit;
+      transition: border-color .18s;
+    }
+    .week-nav button:hover { border-color: var(--accent); }
+    #week-label { font-size: 0.88rem; color: var(--muted); font-family: 'IBM Plex Mono', monospace; }
 
-  /* Chart */
-  .chart-wrap { position: relative; height: 180px; }
-  canvas { width: 100% !important; height: 100% !important; }
+    /* ── Catálogo margin bar ── */
+    .bar-mini { display: flex; align-items: center; gap: 7px; }
+    .bar-mini-track { flex: 1; height: 5px; background: var(--border); border-radius: 3px; overflow: hidden; }
+    .bar-mini-fill  { height: 100%; border-radius: 3px; background: var(--accent); }
+    .margin-pct { font-size: 0.72rem; color: var(--muted); width: 38px; text-align: right; }
 
-  /* Bar chart */
-  .bar-row { display: flex; align-items: center; gap: 8px; margin-bottom: 10px; }
-  .bar-label { font-family: 'IBM Plex Mono', monospace; font-size: 10px; color: #4a5568; width: 90px; flex-shrink: 0; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
-  .bar-track { flex: 1; height: 5px; background: #1e2430; border-radius: 3px; overflow: hidden; }
-  .bar-fill { height: 100%; border-radius: 3px; background: #00d4aa; transition: width 0.5s ease; }
-  .bar-val { font-family: 'IBM Plex Mono', monospace; font-size: 10px; color: #8899aa; width: 44px; text-align: right; }
-
-  /* Table */
-  .data-table { width: 100%; border-collapse: collapse; }
-  .data-table th { font-family: 'IBM Plex Mono', monospace; font-size: 9px; text-transform: uppercase; letter-spacing: 1.5px; color: #2a3245; text-align: left; padding: 0 0 10px; border-bottom: 1px solid #1e2430; font-weight: 400; }
-  .data-table td { font-size: 12px; padding: 9px 0; border-bottom: 1px solid #151820; color: #8899aa; font-family: 'IBM Plex Mono', monospace; }
-  .data-table tr:last-child td { border-bottom: none; }
-  .data-table td.label { color: #6a7a8a; font-family: 'IBM Plex Sans', sans-serif; font-size: 12px; }
-  .data-table td.num { text-align: right; }
-  .data-table td.pos { color: #00d4aa; }
-  .data-table td.neg { color: #e05c5c; }
-  .tag { display: inline-block; font-size: 9px; padding: 2px 7px; border-radius: 3px; font-family: 'IBM Plex Mono', monospace; }
-  .tag-ok { background: rgba(0,212,170,0.1); color: #00d4aa; }
-  .tag-no { background: rgba(224,92,92,0.1); color: #e05c5c; }
-  .tag-zero { background: rgba(255,255,255,0.04); color: #3a4255; }
-
-  /* Products */
-  .pag-hidden { display: none; }
-  .search-input { width: 100%; padding: 8px 14px; border: 1px solid #1e2430; border-radius: 6px; font-size: 12px; font-family: 'IBM Plex Mono', monospace; background: #0d0f14; color: #e8eaf0; margin-bottom: 14px; outline: none; transition: border-color .15s; }
-  .search-input:focus { border-color: rgba(0,212,170,0.3); }
-  .search-input::placeholder { color: #2a3245; }
-  .prod-table { width: 100%; border-collapse: collapse; font-size: 11px; }
-  .prod-table th { text-align: left; padding: 7px 8px; font-family: 'IBM Plex Mono', monospace; font-size: 9px; text-transform: uppercase; letter-spacing: 1.5px; color: #2a3245; border-bottom: 1px solid #1e2430; font-weight: 400; }
-  .prod-table td { padding: 8px 8px; border-bottom: 1px solid #151820; color: #8899aa; font-family: 'IBM Plex Mono', monospace; }
-  .prod-table tr:last-child td { border-bottom: none; }
-  .prod-table tr:hover td { background: rgba(255,255,255,0.015); }
-  .prod-table td.name { color: #c8cad8; font-family: 'IBM Plex Sans', sans-serif; font-size: 12px; }
-  .mini-bar { width: 40px; height: 4px; background: #1e2430; border-radius: 2px; display: inline-block; vertical-align: middle; margin-left: 6px; overflow: hidden; }
-  .mini-fill { height: 100%; border-radius: 2px; }
-
-  /* Personal */
-  .info-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-bottom: 10px; }
-  .avatar-card { display: flex; flex-direction: column; align-items: center; text-align: center; gap: 10px; padding: 1.5rem; }
-  .avatar { width: 40px; height: 40px; border-radius: 50%; display: inline-flex; align-items: center; justify-content: center; font-family: 'IBM Plex Mono', monospace; font-size: 12px; font-weight: 500; }
-  .sal-row { display: flex; justify-content: space-between; align-items: center; padding: 9px 0; border-bottom: 1px solid #151820; flex-wrap: wrap; gap: 6px; }
-  .sal-row:last-child { border-bottom: none; }
-
-  /* Loading */
-  .loading { display: flex; flex-direction: column; align-items: center; justify-content: center; height: 200px; gap: 12px; }
-  .spinner { width: 24px; height: 24px; border: 2px solid #1e2430; border-top-color: #00d4aa; border-radius: 50%; animation: spin 0.8s linear infinite; }
-  @keyframes spin { to { transform: rotate(360deg); } }
-  .loading-text { font-family: 'IBM Plex Mono', monospace; font-size: 10px; color: #2a3245; letter-spacing: 2px; }
-  .error-msg { font-family: 'IBM Plex Mono', monospace; font-size: 11px; color: #e05c5c; padding: 12px; background: rgba(224,92,92,0.08); border: 1px solid rgba(224,92,92,0.2); border-radius: 6px; margin-bottom: 14px; }
-
-  @media (max-width: 900px) {
-    .sidebar { display: none; }
-    .kpi-grid { grid-template-columns: repeat(2, 1fr); }
-    .panel-row { grid-template-columns: 1fr; }
-    .info-grid { grid-template-columns: 1fr; }
-    .tab-bar { display: flex; }
-  }
-</style>
+    /* ── Google Sheets view ── */
+    .sheets-wrap {
+      margin: -24px -32px;
+      height: calc(100vh - 110px);
+    }
+    .sheets-wrap iframe {
+      width: 100%; height: 100%; border: none; display: block;
+    }
+  </style>
 </head>
 <body>
-<div class="app">
 
-  <!-- SIDEBAR -->
-  <div class="sidebar">
-    <div class="logo">
-      <div class="logo-text">NEXOS</div>
-      <div class="logo-sub">FINANZAS · SISTEMA</div>
-    </div>
-    <nav class="nav">
-      <div class="nav-section">Vistas</div>
-      <div class="nav-item active" data-page="p-overview"><span class="nav-dot"></span> Resumen</div>
-      <div class="nav-item" data-page="p-products"><span class="nav-dot"></span> Catálogo</div>
-      <div class="nav-item" data-page="p-personal"><span class="nav-dot"></span> Personal</div>
-      <div class="nav-item" data-page="p-sheets"><span class="nav-dot"></span> Hoja de Cálculo</div>
-    </nav>
-    <div class="sidebar-footer">
-      <div class="rate-line">USD · <span id="sb-usd">…</span> CUP</div>
-      <div class="rate-line">MLC · <span id="sb-mlc">…</span> CUP</div>
+<header>
+  <h1><span>Finanzas</span> Nexos</h1>
+  <div class="header-right">
+    <span id="fecha-hoy"></span>
+    <span class="badge" id="badge-estado">LIVE</span>
+  </div>
+</header>
+
+<div class="tabs">
+  <button class="tab active" data-view="hoy">Hoy</button>
+  <button class="tab" data-view="semana">Esta Semana</button>
+  <button class="tab" data-view="catalogo">Catálogo</button>
+  <button class="tab" data-view="sheets">📊 Hoja</button>
+</div>
+
+<main>
+
+  <!-- ════ HOY ════ -->
+  <div class="view active" id="view-hoy">
+    <div id="hoy-loading" class="loading-wrap"><div class="spinner"></div> Cargando datos…</div>
+    <div id="hoy-content" style="display:none">
+      <div class="kpi-grid">
+        <div class="kpi" style="--kpi-color:var(--accent)">
+          <div class="kpi-icon">🛒</div>
+          <div class="kpi-label">Artículos vendidos</div>
+          <div class="kpi-value" id="kpi-articulos">—</div>
+          <div class="kpi-sub">unidades hoy</div>
+        </div>
+        <div class="kpi" style="--kpi-color:var(--accent)">
+          <div class="kpi-icon">💵</div>
+          <div class="kpi-label">Total vendido</div>
+          <div class="kpi-value" id="kpi-venta">—</div>
+          <div class="kpi-sub">CUP</div>
+        </div>
+        <div class="kpi" style="--kpi-color:var(--red)">
+          <div class="kpi-icon">📉</div>
+          <div class="kpi-label">Inversión</div>
+          <div class="kpi-value" id="kpi-inversion">—</div>
+          <div class="kpi-sub">CUP</div>
+        </div>
+        <div class="kpi" style="--kpi-color:var(--yellow)">
+          <div class="kpi-icon">✅</div>
+          <div class="kpi-label">Ganancia Neta</div>
+          <div class="kpi-value" id="kpi-ganancia">—</div>
+          <div class="kpi-sub">después de impuestos</div>
+        </div>
+      </div>
+
+      <div class="charts-grid">
+        <div class="chart-card">
+          <h3>Ventas por producto (hoy)</h3>
+          <div class="chart-wrap"><canvas id="chart-hoy-productos"></canvas></div>
+        </div>
+        <div class="chart-card">
+          <h3>Desglose financiero</h3>
+          <div class="chart-wrap"><canvas id="chart-hoy-donut"></canvas></div>
+        </div>
+      </div>
+
+      <div class="table-card">
+        <div class="table-header"><h3>Detalle de ventas</h3></div>
+        <table>
+          <thead>
+            <tr>
+              <th>Producto</th>
+              <th class="num">Cant.</th>
+              <th class="num">Precio/u</th>
+              <th class="num">Total</th>
+              <th class="num">Gan. Neta</th>
+            </tr>
+          </thead>
+          <tbody id="tbody-hoy"></tbody>
+        </table>
+      </div>
     </div>
   </div>
 
-  <!-- MAIN -->
-  <div class="main">
-    <div class="topbar">
-      <div class="page-title" id="top-title">Resumen financiero</div>
-      <div class="topbar-right">
-        <div class="month-nav">
-          <button class="month-btn" onclick="changeMonth(-1)">‹</button>
-          <span class="month-label" id="top-mes">…</span>
-          <button class="month-btn" onclick="changeMonth(1)">›</button>
+  <!-- ════ SEMANA ════ -->
+  <div class="view" id="view-semana">
+    <div id="sem-loading" class="loading-wrap"><div class="spinner"></div> Cargando semana…</div>
+    <div id="sem-content" style="display:none">
+      <div class="week-nav">
+        <button id="btn-prev-week">← Anterior</button>
+        <span id="week-label">—</span>
+        <button id="btn-next-week">Siguiente →</button>
+      </div>
+
+      <div class="kpi-grid">
+        <div class="kpi" style="--kpi-color:var(--accent)">
+          <div class="kpi-icon">🛒</div>
+          <div class="kpi-label">Artículos semana</div>
+          <div class="kpi-value" id="kpi-sem-art">—</div>
         </div>
-        <div class="badge gray" id="top-periodo">…</div>
-        <div class="badge" id="top-meta">…</div>
+        <div class="kpi" style="--kpi-color:var(--accent)">
+          <div class="kpi-icon">💵</div>
+          <div class="kpi-label">Venta semana</div>
+          <div class="kpi-value" id="kpi-sem-venta">—</div>
+          <div class="kpi-sub">CUP</div>
+        </div>
+        <div class="kpi" style="--kpi-color:var(--yellow)">
+          <div class="kpi-icon">✅</div>
+          <div class="kpi-label">Ganancia Neta</div>
+          <div class="kpi-value" id="kpi-sem-gan">—</div>
+          <div class="kpi-sub">CUP</div>
+        </div>
+        <div class="kpi" style="--kpi-color:var(--red)">
+          <div class="kpi-icon">👩</div>
+          <div class="kpi-label">Salarios</div>
+          <div class="kpi-value" id="kpi-salarios">—</div>
+          <div class="kpi-sub">Danay + Dayan</div>
+        </div>
+      </div>
+
+      <div class="charts-grid">
+        <div class="chart-card" style="grid-column: span 2">
+          <h3>Ventas diarias — semana</h3>
+          <div class="chart-wrap" style="height:260px"><canvas id="chart-semana-dias"></canvas></div>
+        </div>
+      </div>
+
+      <div class="charts-grid">
+        <div class="chart-card">
+          <h3>Top productos más vendidos</h3>
+          <div class="chart-wrap"><canvas id="chart-top-productos"></canvas></div>
+        </div>
+        <div class="chart-card">
+          <h3>Ganancia acumulada por día</h3>
+          <div class="chart-wrap"><canvas id="chart-ganancia-dia"></canvas></div>
+        </div>
       </div>
     </div>
+  </div>
 
-    <div class="content">
-
-      <!-- Error banner -->
-      <div id="error-banner" class="error-msg" style="display:none"></div>
-
-      <!-- Period pills -->
-      <div class="period-bar" id="pills-container"></div>
-
-      <!-- KPIs -->
+  <!-- ════ CATÁLOGO ════ -->
+  <div class="view" id="view-catalogo">
+    <div id="cat-loading" class="loading-wrap"><div class="spinner"></div> Cargando catálogo…</div>
+    <div id="cat-content" style="display:none">
       <div class="kpi-grid">
-        <div class="kpi-card">
-          <div class="kpi-label">Venta total acumulada</div>
-          <div class="kpi-value green" id="k-venta">—</div>
-          <div class="kpi-sub">CUP · período seleccionado</div>
+        <div class="kpi" style="--kpi-color:var(--accent)">
+          <div class="kpi-icon">📦</div>
+          <div class="kpi-label">Productos</div>
+          <div class="kpi-value" id="kpi-cat-total">—</div>
         </div>
-        <div class="kpi-card">
-          <div class="kpi-label">Inversión total</div>
-          <div class="kpi-value" id="k-inv">—</div>
-          <div class="kpi-sub">CUP · costo mercancía</div>
+        <div class="kpi" style="--kpi-color:var(--accent)">
+          <div class="kpi-icon">💰</div>
+          <div class="kpi-label">Mayor ganancia/u</div>
+          <div class="kpi-value" id="kpi-cat-max">—</div>
+          <div class="kpi-sub" id="kpi-cat-max-prod"></div>
         </div>
-        <div class="kpi-card">
-          <div class="kpi-label">Ganancia neta</div>
-          <div class="kpi-value" id="k-neta">—</div>
-          <div class="kpi-sub">CUP · tras 20% s/ventas</div>
+        <div class="kpi" style="--kpi-color:var(--yellow)">
+          <div class="kpi-icon">📊</div>
+          <div class="kpi-label">Margen promedio</div>
+          <div class="kpi-value" id="kpi-cat-margen">—</div>
         </div>
-        <div class="kpi-card">
-          <div class="kpi-label">Margen promedio neto</div>
-          <div class="kpi-value green" id="k-margen">—</div>
-          <div class="kpi-sub">Catálogo completo</div>
-        </div>
-      </div>
-
-      <!-- Mobile tabs -->
-      <div class="tab-bar" id="tab-bar-mobile">
-        <button class="tab active" data-page="p-overview">Resumen</button>
-        <button class="tab" data-page="p-products">Catálogo</button>
-        <button class="tab" data-page="p-personal">Personal</button>
-        <button class="tab" data-page="p-sheets">Hoja</button>
-      </div>
-
-      <!-- ── OVERVIEW ── -->
-      <div id="p-overview">
-        <div id="overview-loading" class="loading">
-          <div class="spinner"></div>
-          <div class="loading-text">Cargando datos…</div>
-        </div>
-        <div id="overview-content" style="display:none">
-          <div class="panel-row">
-            <div class="panel">
-              <div class="panel-title">Ventas vs Inversión por período</div>
-              <div class="chart-wrap"><canvas id="c1"></canvas></div>
-            </div>
-            <div class="panel">
-              <div class="panel-title">Top 6 — margen neto %</div>
-              <div id="top-margen"></div>
-            </div>
-          </div>
-          <div class="panel-row">
-            <div class="panel">
-              <div class="panel-title">Ganancia neta por período</div>
-              <div class="chart-wrap"><canvas id="c2"></canvas></div>
-            </div>
-            <div class="panel">
-              <div class="panel-title">Resumen por período</div>
-              <table class="data-table">
-                <thead><tr><th>Fecha</th><th class="num">Venta</th><th class="num">Neta</th><th>Estado</th></tr></thead>
-                <tbody id="dtbody"></tbody>
-              </table>
-            </div>
-          </div>
+        <div class="kpi" style="--kpi-color:var(--red)">
+          <div class="kpi-icon">⬇️</div>
+          <div class="kpi-label">Menor margen</div>
+          <div class="kpi-value" id="kpi-cat-min">—</div>
+          <div class="kpi-sub" id="kpi-cat-min-prod"></div>
         </div>
       </div>
 
-      <!-- ── PRODUCTS ── -->
-      <div id="p-products" class="pag-hidden">
-        <div class="panel">
-          <input class="search-input" type="text" placeholder="Buscar producto…" id="srch" oninput="filterProds()">
-          <div style="overflow-x:auto">
-            <table class="prod-table">
-              <thead><tr><th>#</th><th>Producto</th><th>P. Venta</th><th>G. Neta</th><th>Margen</th></tr></thead>
-              <tbody id="prod-body"></tbody>
-            </table>
-          </div>
+      <div class="charts-grid">
+        <div class="chart-card" style="grid-column: span 2">
+          <h3>Ganancia neta por producto (CUP/unidad)</h3>
+          <div class="chart-wrap" style="height:320px"><canvas id="chart-catalogo-bar"></canvas></div>
         </div>
       </div>
 
-      <!-- ── PERSONAL ── -->
-      <div id="p-personal" class="pag-hidden">
-        <div class="info-grid">
-          <div class="panel avatar-card">
-            <div class="avatar" style="background:rgba(60,52,137,0.3);color:#8b84d4">DA</div>
-            <div style="font-weight:500;font-size:14px">Danay</div>
-            <div class="kpi-value green" id="s-danay">—</div>
-            <div class="kpi-sub">CUP acumulado</div>
-          </div>
-          <div class="panel avatar-card">
-            <div class="avatar" style="background:rgba(153,60,29,0.3);color:#d47a5a">DY</div>
-            <div style="font-weight:500;font-size:14px">Dayan</div>
-            <div class="kpi-value green" id="s-dayan">—</div>
-            <div class="kpi-sub">CUP acumulado</div>
-          </div>
+      <div class="table-card">
+        <div class="table-header">
+          <h3>Tabla de rentabilidad</h3>
+          <input class="search-box" type="text" id="search-catalogo" placeholder="Buscar producto…" />
         </div>
-        <div class="panel" style="margin-bottom:10px">
-          <div class="panel-title">Desglose por período</div>
-          <div id="sal-list"></div>
-        </div>
-        <div class="panel">
-          <div class="panel-title">Evolución salarial</div>
-          <div class="chart-wrap"><canvas id="c3"></canvas></div>
-        </div>
+        <table id="tabla-catalogo">
+          <thead>
+            <tr>
+              <th data-col="nombre">Producto <span class="sort-icon">↕</span></th>
+              <th class="num" data-col="inversion_total">Inversión <span class="sort-icon">↕</span></th>
+              <th class="num" data-col="precio_venta">Precio <span class="sort-icon">↕</span></th>
+              <th class="num" data-col="ganancia_neta">Gan. Neta <span class="sort-icon">↕</span></th>
+              <th>Margen</th>
+              <th>Rentabilidad</th>
+            </tr>
+          </thead>
+          <tbody id="tbody-catalogo"></tbody>
+        </table>
       </div>
+    </div>
+  </div>
 
-      <div id="p-sheets" class="pag-hidden">
-        <div style="margin:-16px -20px;height:calc(100vh - 100px);">
-          <iframe
-            src="https://docs.google.com/spreadsheets/d/1g8lR3i_ex5scINzYoUA_hHM2ImaQ4Tg642MOTVvJ77Y/htmlview?rm=minimal"
-            style="width:100%;height:100%;border:none;display:block;"
-            allowfullscreen>
-          </iframe>
-        </div>
-      </div>
+  <!-- ════ GOOGLE SHEETS ════ -->
+  <div class="view" id="view-sheets">
+    <div class="sheets-wrap">
+      <iframe
+        src="https://docs.google.com/spreadsheets/d/1g8lR3i_ex5scINzYoUA_hHM2ImaQ4Tg642MOTVvJ77Y/htmlview?rm=minimal&gid=1473474885"
+        allowfullscreen>
+      </iframe>
+    </div>
+  </div>
 
-    </div><!-- /content -->
-  </div><!-- /main -->
-</div><!-- /app -->
+</main>
 
-<script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.min.js"></script>
 <script>
-// ── State ──────────────────────────────────────────────────────────────────
-let DAILY = [];
-let PRODS = [];
-let SALARIOS = { Danay: 0, Dayan: 0 };
-let currentPeriod = 'all';
-let currentMes = null;   // "M-YY" format e.g. "4-26"
-let charts = {};
+// ══════════════════════════════════════════════════════
+// CONFIG
+// ══════════════════════════════════════════════════════
+const API = 'https://dtar-01nexos.oj16f5.easypanel.host';
 
-const fmt = n => Math.round(n).toLocaleString('es-ES');
+// ── Helpers ──
+const fmt    = n => Math.round(n).toLocaleString('es-CU');
+const fmtDec = n => n.toLocaleString('es-CU', {minimumFractionDigits:2, maximumFractionDigits:2});
+const margen = p => ((p.ganancia_neta / p.precio_venta) * 100);
 
-// ── Helpers ────────────────────────────────────────────────────────────────
-function fmtDate(fecha) {
-  // "2-4-26" → "2 Abr"
-  const meses = ['','Ene','Feb','Mar','Abr','May','Jun','Jul','Ago','Sep','Oct','Nov','Dic'];
-  const [d, m] = fecha.split('-').map(Number);
-  return `${d} ${meses[m] || m}`;
+function showLoading(id, show) {
+  document.getElementById(id + '-loading').style.display = show ? 'flex' : 'none';
+  document.getElementById(id + '-content').style.display = show ? 'none' : 'block';
 }
 
-function prevMonth(mes) {
-  let [m, y] = mes.split('-').map(Number);
-  m--; if (m < 1) { m = 12; y--; }
-  return `${m}-${y}`;
-}
-function nextMonth(mes) {
-  let [m, y] = mes.split('-').map(Number);
-  m++; if (m > 12) { m = 1; y++; }
-  return `${m}-${y}`;
-}
+// ── Fecha ──
+document.getElementById('fecha-hoy').textContent =
+  new Date().toLocaleDateString('es-CU', {weekday:'long', day:'numeric', month:'long', year:'numeric'});
 
-// ── Data loading ───────────────────────────────────────────────────────────
-async function loadCatalogo() {
-  const res = await fetch('/api/catalogo');
-  if (!res.ok) throw new Error(`/api/catalogo → ${res.status}`);
-  const data = await res.json();
-
-  PRODS = data.productos
-    .filter(p => p.precio_venta > 0)
-    .map(p => ({
-      n: p.nombre,
-      p: p.precio_venta,
-      gn: p.ganancia_neta,
-      m: p.precio_venta > 0 ? (p.ganancia_neta / p.precio_venta * 100) : 0,
-    }));
-
-  SALARIOS = data.salarios || { Danay: 0, Dayan: 0 };
-
-  const tasas = data.tasas || {};
-  document.getElementById('sb-usd').textContent = tasas.USD || '—';
-  document.getElementById('sb-mlc').textContent = tasas.MLC || '—';
-
-  // Catalog margin KPI
-  if (PRODS.length > 0) {
-    const avgMargen = PRODS.reduce((s, p) => s + p.m, 0) / PRODS.length;
-    document.getElementById('k-margen').textContent = avgMargen.toFixed(1) + '%';
-  }
-}
-
-async function loadMes(mes) {
-  const url = mes ? `/api/mes?mes=${mes}` : '/api/mes';
-  const res = await fetch(url);
-  if (!res.ok) throw new Error(`/api/mes → ${res.status}`);
-  const data = await res.json();
-
-  currentMes = data.mes;
-
-  // Flatten all days from all weeks
-  DAILY = [];
-  for (const semana of (data.semanas || [])) {
-    for (const dia of (semana.dias || [])) {
-      const v   = dia.totales.venta;
-      const inv = dia.totales.inversion;
-      const g   = dia.totales.ganancia;   // ganancia bruta = venta - inversion
-      const n   = g * 0.8;                // neta tras 20%
-      // Salario: 10% de ganancia bruta si positiva, si no → costo fijo negativo
-      const sBase = SALARIOS.Danay || 0;
-      const sD = g > 0 ? g * 0.1 : -sBase;
-      const sY = g > 0 ? g * 0.1 : -(SALARIOS.Dayan || 0);
-
-      DAILY.push({ f: dia.fecha, lb: fmtDate(dia.fecha), v, inv, g, n, sD, sY });
-    }
-  }
-
-  // Update topbar
-  document.getElementById('top-mes').textContent = (data.mes_label || '').toUpperCase();
-  if (DAILY.length > 0) {
-    document.getElementById('top-periodo').textContent = `Última hoja: ${DAILY[DAILY.length-1].f}`;
-    document.getElementById('top-meta').textContent = `${DAILY.filter(d=>d.v>0).length} días c/venta · ${PRODS.length} productos`;
-  }
-}
-
-async function init() {
-  showLoading(true);
-  showError('');
-  try {
-    await loadCatalogo();
-    await loadMes(null);
-    buildPills();
-    currentPeriod = 'all';
-    refresh();
-    filterProds();
-    showLoading(false);
-  } catch (e) {
-    showLoading(false);
-    showError('Error al cargar datos: ' + e.message);
-    console.error(e);
-  }
-}
-
-async function changeMonth(delta) {
-  if (!currentMes) return;
-  const mes = delta < 0 ? prevMonth(currentMes) : nextMonth(currentMes);
-  showLoading(true);
-  showError('');
-  try {
-    await loadMes(mes);
-    buildPills();
-    currentPeriod = 'all';
-    refresh();
-    showLoading(false);
-  } catch (e) {
-    showLoading(false);
-    showError('Error: ' + e.message);
-  }
-}
-
-function showLoading(on) {
-  document.getElementById('overview-loading').style.display = on ? 'flex' : 'none';
-  document.getElementById('overview-content').style.display = on ? 'none' : 'block';
-}
-
-function showError(msg) {
-  const el = document.getElementById('error-banner');
-  el.style.display = msg ? 'block' : 'none';
-  el.textContent = msg;
-}
-
-// ── Pills ──────────────────────────────────────────────────────────────────
-function buildPills() {
-  const c = document.getElementById('pills-container');
-  const items = [['all', 'Todos'], ...DAILY.map(d => [d.f, d.lb])];
-  c.innerHTML = items.map(([f, lb]) =>
-    `<span class="pill${f === 'all' ? ' on' : ''}" onclick="setPeriod('${f}',this)">${lb}</span>`
-  ).join('');
-}
-
-function setPeriod(p, el) {
-  currentPeriod = p;
-  document.querySelectorAll('.pill').forEach(x => x.classList.remove('on'));
-  el.classList.add('on');
-  refresh();
-}
-
-// ── Aggregation ────────────────────────────────────────────────────────────
-function getData() { return currentPeriod === 'all' ? DAILY : DAILY.filter(d => d.f === currentPeriod); }
-function agg(data) {
-  return {
-    v:   data.reduce((s, d) => s + d.v, 0),
-    inv: data.reduce((s, d) => s + d.inv, 0),
-    n:   data.reduce((s, d) => s + d.n, 0),
-    sD:  data.reduce((s, d) => s + d.sD, 0),
-    sY:  data.reduce((s, d) => s + d.sY, 0),
-  };
-}
-
-// ── Refresh ────────────────────────────────────────────────────────────────
-function refresh() {
-  const data = getData();
-  const a = agg(data);
-
-  document.getElementById('k-venta').textContent = fmt(a.v);
-  document.getElementById('k-inv').textContent   = fmt(a.inv);
-  const ne = document.getElementById('k-neta');
-  ne.textContent = fmt(a.n);
-  ne.className = 'kpi-value ' + (a.n >= 0 ? 'green' : 'red');
-
-  renderTable(data);
-  renderCharts(data);
-  renderTop();
-  renderSal(data, a);
-}
-
-function renderTable(data) {
-  document.getElementById('dtbody').innerHTML = data.map(d => {
-    const tag = d.v === 0
-      ? '<span class="tag tag-zero">Sin venta</span>'
-      : d.n >= 0
-        ? '<span class="tag tag-ok">Positivo</span>'
-        : '<span class="tag tag-no">Pérdida</span>';
-    return `<tr>
-      <td class="label">${d.lb}</td>
-      <td class="num">${fmt(d.v)}</td>
-      <td class="num ${d.n>=0?'pos':'neg'}">${fmt(d.n)}</td>
-      <td>${tag}</td>
-    </tr>`;
-  }).join('');
-}
-
-// ── Charts ─────────────────────────────────────────────────────────────────
-const COPTS = {
-  responsive: true, maintainAspectRatio: false,
-  plugins: {
-    legend: { labels: { font: { size: 10, family: 'IBM Plex Mono' }, color: '#3a4255', boxWidth: 10 } },
-    tooltip: { backgroundColor: '#111420', borderColor: '#1e2430', borderWidth: 1, titleColor: '#e8eaf0', bodyColor: '#8899aa', padding: 10 }
-  },
-  scales: {
-    x: { grid: { display: false }, ticks: { color: '#2a3245', font: { size: 10, family: 'IBM Plex Mono' } } },
-    y: { grid: { color: '#1a1e28' }, ticks: { color: '#2a3245', font: { size: 10, family: 'IBM Plex Mono' }, callback: v => fmt(v/1000)+'k' } }
-  }
-};
-
-function renderCharts(data) {
-  const labs = data.map(d => d.lb);
-  ['c1','c2'].forEach(id => { if (charts[id]) charts[id].destroy(); });
-
-  charts.c1 = new Chart(document.getElementById('c1'), {
-    type: 'bar',
-    data: { labels: labs, datasets: [
-      { label: 'Venta', data: data.map(d=>d.v), backgroundColor: 'rgba(0,212,170,0.5)', borderColor: '#00d4aa', borderWidth: 1, borderRadius: 4 },
-      { label: 'Inversión', data: data.map(d=>d.inv), backgroundColor: 'rgba(224,92,92,0.4)', borderColor: '#e05c5c', borderWidth: 1, borderRadius: 4 }
-    ]},
-    options: COPTS
+// ── Tabs ──
+document.querySelectorAll('.tab').forEach(btn => {
+  btn.addEventListener('click', () => {
+    document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
+    document.querySelectorAll('.view').forEach(v => v.classList.remove('active'));
+    btn.classList.add('active');
+    document.getElementById('view-' + btn.dataset.view).classList.add('active');
   });
-
-  charts.c2 = new Chart(document.getElementById('c2'), {
-    type: 'line',
-    data: { labels: labs, datasets: [{
-      label: 'Ganancia neta',
-      data: data.map(d => d.n),
-      borderColor: '#00d4aa',
-      backgroundColor: 'rgba(0,212,170,0.06)',
-      tension: 0.4, fill: true,
-      pointBackgroundColor: '#0d0f14',
-      pointBorderColor: '#00d4aa',
-      pointBorderWidth: 2,
-      pointRadius: 4,
-    }]},
-    options: COPTS
-  });
-}
-
-function renderTop() {
-  const top = [...PRODS].sort((a,b) => b.m - a.m).slice(0, 6);
-  if (!top.length) { document.getElementById('top-margen').innerHTML = '<div style="color:#2a3245;font-size:11px;padding:8px 0">Sin datos</div>'; return; }
-  const mx = Math.max(...top.map(p => p.m));
-  document.getElementById('top-margen').innerHTML = top.map(p => {
-    const col = p.m >= 40 ? '#00d4aa' : p.m >= 25 ? '#7ab8d6' : '#8899aa';
-    const lbl = p.n.length > 16 ? p.n.slice(0, 14) + '…' : p.n;
-    return `<div class="bar-row">
-      <span class="bar-label" title="${p.n}">${lbl}</span>
-      <div class="bar-track"><div class="bar-fill" style="width:${Math.round(p.m/mx*100)}%;background:${col}"></div></div>
-      <span class="bar-val" style="color:${col}">${p.m.toFixed(1)}%</span>
-    </div>`;
-  }).join('');
-}
-
-// ── Products ───────────────────────────────────────────────────────────────
-function filterProds() {
-  const q = document.getElementById('srch').value.toLowerCase();
-  const list = [...PRODS].filter(p => p.n.toLowerCase().includes(q)).sort((a,b) => b.m - a.m);
-  document.getElementById('prod-body').innerHTML = list.map((p, i) => {
-    const col = p.m >= 40 ? '#00d4aa' : p.m >= 25 ? '#7ab8d6' : '#8899aa';
-    return `<tr>
-      <td style="color:#2a3245;font-size:10px">${i+1}</td>
-      <td class="name">${p.n}</td>
-      <td>${fmt(p.p)}</td>
-      <td style="color:#00d4aa">${fmt(p.gn)}</td>
-      <td><span style="color:${col};font-weight:500">${p.m.toFixed(1)}%</span><span class="mini-bar"><span class="mini-fill" style="width:${Math.round(p.m)}%;background:${col}"></span></span></td>
-    </tr>`;
-  }).join('');
-}
-
-// ── Personal ───────────────────────────────────────────────────────────────
-function renderSal(data, a) {
-  document.getElementById('s-danay').textContent = fmt(a.sD);
-  document.getElementById('s-danay').className = 'kpi-value ' + (a.sD >= 0 ? 'green' : 'red');
-  document.getElementById('s-dayan').textContent = fmt(a.sY);
-  document.getElementById('s-dayan').className = 'kpi-value ' + (a.sY >= 0 ? 'green' : 'red');
-
-  document.getElementById('sal-list').innerHTML = data.map(d => {
-    const tot = (d.sD || 0) + (d.sY || 0);
-    const pct = d.n > 0 ? Math.round(tot / d.n * 100) : 0;
-    return `<div class="sal-row">
-      <span style="font-size:12px;color:#8899aa;font-family:'IBM Plex Mono',monospace">${d.lb}</span>
-      <span style="font-size:11px;color:#3a4255;font-family:'IBM Plex Mono',monospace">Danay: ${fmt(d.sD)} · Dayan: ${fmt(d.sY)}</span>
-      <span style="font-size:10px;color:#2a3245;font-family:'IBM Plex Mono',monospace">${pct > 0 ? pct + '% s/neta' : '—'}</span>
-    </div>`;
-  }).join('');
-
-  if (charts.c3) charts.c3.destroy();
-  charts.c3 = new Chart(document.getElementById('c3'), {
-    type: 'bar',
-    data: { labels: data.map(d => d.lb), datasets: [
-      { label: 'Danay', data: data.map(d => d.sD || 0), backgroundColor: 'rgba(139,132,212,0.6)', borderColor: '#8b84d4', borderWidth: 1, borderRadius: 4 },
-      { label: 'Dayan', data: data.map(d => d.sY || 0), backgroundColor: 'rgba(212,122,90,0.6)', borderColor: '#d47a5a', borderWidth: 1, borderRadius: 4 }
-    ]},
-    options: COPTS
-  });
-}
-
-// ── Navigation ─────────────────────────────────────────────────────────────
-const PAGE_TITLES = { 'p-overview': 'Resumen financiero', 'p-products': 'Catálogo · Productos', 'p-personal': 'Personal · Salarios', 'p-sheets': 'Hoja de Cálculo' };
-
-function showPage(id) {
-  ['p-overview','p-products','p-personal','p-sheets'].forEach(p => {
-    document.getElementById(p).className = p === id ? '' : 'pag-hidden';
-  });
-  document.querySelectorAll('[data-page]').forEach(el => {
-    el.classList.toggle('active', el.dataset.page === id);
-  });
-  document.getElementById('top-title').textContent = PAGE_TITLES[id] || '';
-
-  if (id === 'p-products') filterProds();
-  if (id === 'p-personal') renderSal(getData(), agg(getData()));
-}
-
-// Wire up nav items and tabs
-document.querySelectorAll('[data-page]').forEach(el => {
-  el.addEventListener('click', () => showPage(el.dataset.page));
 });
 
-// ── Boot ───────────────────────────────────────────────────────────────────
-init();
+// ══════════════════════════════════════════════════════
+// VISTA: HOY
+// ══════════════════════════════════════════════════════
+let chartHoyBar = null, chartHoyDonut = null;
+
+async function loadHoy() {
+  try {
+    const res  = await fetch(`${API}/api/hoy`);
+    const data = await res.json();
+    const { ventas, totales } = data;
+
+    document.getElementById('kpi-articulos').textContent = totales.articulos;
+    document.getElementById('kpi-venta').textContent     = fmt(totales.venta);
+    document.getElementById('kpi-inversion').textContent = fmt(totales.inversion);
+    document.getElementById('kpi-ganancia').textContent  = fmt(totales.ganancia);
+
+    // Tabla
+    document.getElementById('tbody-hoy').innerHTML = ventas.length
+      ? ventas.map(v => `
+          <tr>
+            <td class="name">${v.nombre}</td>
+            <td class="num">${v.cantidad}</td>
+            <td class="num">${fmt(v.precio_venta)}</td>
+            <td class="num">${fmt(v.total_venta)}</td>
+            <td class="num" style="color:var(--green)">${fmt(v.total_ganancia)}</td>
+          </tr>`).join('')
+      : `<tr><td colspan="5" style="text-align:center;color:var(--muted);padding:24px">Sin ventas registradas hoy</td></tr>`;
+
+    // Gráfica barras
+    if (chartHoyBar) chartHoyBar.destroy();
+    chartHoyBar = new Chart(document.getElementById('chart-hoy-productos'), {
+      type: 'bar',
+      data: {
+        labels: ventas.map(v => v.nombre.length > 18 ? v.nombre.slice(0,18)+'…' : v.nombre),
+        datasets: [
+          { label: 'Total vendido', data: ventas.map(v => v.total_venta),    backgroundColor: 'rgba(0,212,170,.7)', borderRadius: 5 },
+          { label: 'Ganancia neta', data: ventas.map(v => v.total_ganancia), backgroundColor: 'rgba(0,212,170,.3)', borderRadius: 5 },
+        ]
+      },
+      options: {
+        responsive: true, maintainAspectRatio: false,
+        plugins: { legend: { labels: { color: '#8899aa', font: { size: 11 } } } },
+        scales: {
+          x: { ticks: { color: '#8899aa', font: { size: 10 } }, grid: { color: 'rgba(255,255,255,.04)' } },
+          y: { ticks: { color: '#8899aa' },                      grid: { color: 'rgba(255,255,255,.04)' } }
+        }
+      }
+    });
+
+    // Donut
+    if (chartHoyDonut) chartHoyDonut.destroy();
+    chartHoyDonut = new Chart(document.getElementById('chart-hoy-donut'), {
+      type: 'doughnut',
+      data: {
+        labels: ['Inversión', 'Impuestos', 'Ganancia Neta'],
+        datasets: [{ data: [totales.inversion, totales.ganancia * 0.25, totales.ganancia],
+          backgroundColor: ['rgba(224,92,92,.8)', 'rgba(255,209,102,.8)', 'rgba(0,212,170,.8)'],
+          borderWidth: 0, hoverOffset: 8 }]
+      },
+      options: {
+        responsive: true, maintainAspectRatio: false, cutout: '65%',
+        plugins: { legend: { position: 'right', labels: { color: '#8899aa', font: { size: 11 }, padding: 14 } } }
+      }
+    });
+
+    showLoading('hoy', false);
+  } catch (e) {
+    document.getElementById('hoy-loading').innerHTML = '⚠️ Error al cargar datos';
+    document.getElementById('badge-estado').className = 'badge demo';
+    document.getElementById('badge-estado').textContent = 'ERROR';
+  }
+}
+
+// ══════════════════════════════════════════════════════
+// VISTA: SEMANA
+// ══════════════════════════════════════════════════════
+let chartSemDias = null, chartTopProd = null, chartGanDia = null;
+let semLoaded = false;
+
+async function loadSemana() {
+  if (semLoaded) return;
+  try {
+    const [resSem, resCat] = await Promise.all([
+      fetch(`${API}/api/semana`),
+      fetch(`${API}/api/catalogo`)
+    ]);
+    const { semana, totales, semana_label } = await resSem.json();
+    const { salarios } = await resCat.json();
+
+    document.getElementById('week-label').textContent = semana_label;
+    document.getElementById('kpi-sem-art').textContent  = totales.articulos;
+    document.getElementById('kpi-sem-venta').textContent = fmt(totales.venta);
+    document.getElementById('kpi-sem-gan').textContent   = fmt(totales.ganancia);
+
+    const salTotal = Object.values(salarios || {}).reduce((a, b) => a + b, 0);
+    document.getElementById('kpi-salarios').textContent = fmt(salTotal);
+
+    const dias   = semana.map(d => d.dia);
+    const ventas = semana.map(d => d.totales.venta);
+    const gans   = semana.map(d => d.totales.ganancia);
+
+    // Ventas diarias
+    if (chartSemDias) chartSemDias.destroy();
+    chartSemDias = new Chart(document.getElementById('chart-semana-dias'), {
+      type: 'bar',
+      data: {
+        labels: dias,
+        datasets: [
+          { label: 'Ventas (CUP)',  data: ventas, backgroundColor: 'rgba(0,212,170,.6)', borderRadius: 5 },
+          { label: 'Ganancia (CUP)', data: gans,  backgroundColor: 'rgba(0,212,170,.25)', borderRadius: 5 }
+        ]
+      },
+      options: {
+        responsive: true, maintainAspectRatio: false,
+        plugins: { legend: { labels: { color: '#8899aa', font: { size: 11 } } } },
+        scales: {
+          x: { ticks: { color: '#8899aa' }, grid: { color: 'rgba(255,255,255,.04)' } },
+          y: { ticks: { color: '#8899aa' }, grid: { color: 'rgba(255,255,255,.04)' } }
+        }
+      }
+    });
+
+    // Top productos
+    const prodMap = {};
+    semana.forEach(d => d.ventas.forEach(v => {
+      prodMap[v.nombre] = (prodMap[v.nombre] || 0) + v.cantidad;
+    }));
+    const top = Object.entries(prodMap).sort((a,b) => b[1]-a[1]).slice(0,10);
+
+    if (chartTopProd) chartTopProd.destroy();
+    chartTopProd = new Chart(document.getElementById('chart-top-productos'), {
+      type: 'bar', indexAxis: 'y',
+      data: {
+        labels: top.map(([n]) => n.length > 20 ? n.slice(0,20)+'…' : n),
+        datasets: [{ data: top.map(([,v]) => v), backgroundColor: 'rgba(0,212,170,.65)', borderRadius: 4 }]
+      },
+      options: {
+        responsive: true, maintainAspectRatio: false,
+        plugins: { legend: { display: false } },
+        scales: {
+          x: { ticks: { color: '#8899aa' }, grid: { color: 'rgba(255,255,255,.04)' } },
+          y: { ticks: { color: '#8899aa', font: { size: 10 } }, grid: { display: false } }
+        }
+      }
+    });
+
+    // Ganancia acumulada
+    const acum = gans.reduce((arr, v) => { arr.push((arr.at(-1)||0)+v); return arr; }, []);
+    if (chartGanDia) chartGanDia.destroy();
+    chartGanDia = new Chart(document.getElementById('chart-ganancia-dia'), {
+      type: 'line',
+      data: {
+        labels: dias,
+        datasets: [{ label: 'Ganancia acumulada', data: acum,
+          borderColor: 'rgba(0,212,170,1)', backgroundColor: 'rgba(0,212,170,.1)',
+          fill: true, tension: 0.4, pointBackgroundColor: 'rgba(0,212,170,1)', pointRadius: 5 }]
+      },
+      options: {
+        responsive: true, maintainAspectRatio: false,
+        plugins: { legend: { display: false } },
+        scales: {
+          x: { ticks: { color: '#8899aa' }, grid: { color: 'rgba(255,255,255,.04)' } },
+          y: { ticks: { color: '#8899aa' }, grid: { color: 'rgba(255,255,255,.04)' } }
+        }
+      }
+    });
+
+    showLoading('sem', false);
+    semLoaded = true;
+  } catch (e) {
+    document.getElementById('sem-loading').innerHTML = '⚠️ Error al cargar semana';
+  }
+}
+
+// ══════════════════════════════════════════════════════
+// VISTA: CATÁLOGO
+// ══════════════════════════════════════════════════════
+let PRODUCTOS = [], sortCol = 'ganancia_neta', sortDir = -1;
+let catLoaded = false;
+
+async function loadCatalogo() {
+  if (catLoaded) return;
+  try {
+    const res  = await fetch(`${API}/api/catalogo`);
+    const data = await res.json();
+    PRODUCTOS = data.productos;
+
+    const maxGan  = Math.max(...PRODUCTOS.map(p => p.ganancia_neta));
+    const minGan  = Math.min(...PRODUCTOS.map(p => p.ganancia_neta));
+    const avgMarg = PRODUCTOS.reduce((s,p) => s + margen(p), 0) / PRODUCTOS.length;
+    const prodMax = PRODUCTOS.find(p => p.ganancia_neta === maxGan);
+    const prodMin = PRODUCTOS.find(p => p.ganancia_neta === minGan);
+
+    document.getElementById('kpi-cat-total').textContent    = PRODUCTOS.length;
+    document.getElementById('kpi-cat-max').textContent      = fmt(maxGan);
+    document.getElementById('kpi-cat-max-prod').textContent = prodMax?.nombre || '';
+    document.getElementById('kpi-cat-min').textContent      = fmt(minGan);
+    document.getElementById('kpi-cat-min-prod').textContent = prodMin?.nombre || '';
+    document.getElementById('kpi-cat-margen').textContent   = avgMarg.toFixed(1) + '%';
+
+    // Gráfica
+    const sorted = [...PRODUCTOS].sort((a,b) => a.ganancia_neta - b.ganancia_neta);
+    new Chart(document.getElementById('chart-catalogo-bar'), {
+      type: 'bar', indexAxis: 'y',
+      data: {
+        labels: sorted.map(p => p.nombre.length>22 ? p.nombre.slice(0,22)+'…' : p.nombre),
+        datasets: [{
+          data: sorted.map(p => p.ganancia_neta),
+          backgroundColor: sorted.map(p => {
+            const m = margen(p);
+            if (m >= 50) return 'rgba(0,212,170,.8)';
+            if (m >= 35) return 'rgba(255,209,102,.8)';
+            return 'rgba(224,92,92,.8)';
+          }),
+          borderRadius: 4
+        }]
+      },
+      options: {
+        responsive: true, maintainAspectRatio: false,
+        plugins: { legend: { display: false },
+          tooltip: { callbacks: { label: ctx => ` ${fmt(ctx.raw)} CUP/u` } }
+        },
+        scales: {
+          x: { ticks: { color: '#8899aa' }, grid: { color: 'rgba(255,255,255,.04)' } },
+          y: { ticks: { color: '#8899aa', font: { size: 10 } }, grid: { display: false } }
+        }
+      }
+    });
+
+    renderTablaCatalogo();
+
+    // Sorting
+    document.querySelectorAll('#tabla-catalogo th[data-col]').forEach(th => {
+      th.addEventListener('click', () => {
+        if (sortCol === th.dataset.col) sortDir *= -1;
+        else { sortCol = th.dataset.col; sortDir = -1; }
+        document.querySelectorAll('#tabla-catalogo th').forEach(h => h.classList.remove('sorted'));
+        th.classList.add('sorted');
+        renderTablaCatalogo();
+      });
+    });
+
+    document.getElementById('search-catalogo').addEventListener('input', renderTablaCatalogo);
+
+    showLoading('cat', false);
+    catLoaded = true;
+  } catch (e) {
+    document.getElementById('cat-loading').innerHTML = '⚠️ Error al cargar catálogo';
+  }
+}
+
+function renderTablaCatalogo() {
+  const q = document.getElementById('search-catalogo').value.toLowerCase();
+  const lista = PRODUCTOS
+    .filter(p => p.nombre.toLowerCase().includes(q))
+    .sort((a, b) => {
+      const av = sortCol === 'nombre' ? a.nombre : a[sortCol];
+      const bv = sortCol === 'nombre' ? b.nombre : b[sortCol];
+      return sortCol === 'nombre'
+        ? av.localeCompare(bv) * sortDir
+        : (av - bv) * sortDir;
+    });
+
+  const maxGan = Math.max(...PRODUCTOS.map(p => p.ganancia_neta));
+
+  document.getElementById('tbody-catalogo').innerHTML = lista.map(p => {
+    const m    = margen(p);
+    const barW = Math.round((p.ganancia_neta / maxGan) * 100);
+    const pill = m >= 50 ? 'pill-green' : m >= 35 ? 'pill-yellow' : 'pill-red';
+    return `
+      <tr>
+        <td class="name">${p.nombre}</td>
+        <td class="num">${fmt(p.inversion_total)}</td>
+        <td class="num">${fmt(p.precio_venta)}</td>
+        <td class="num" style="color:var(--green)">${fmt(p.ganancia_neta)}</td>
+        <td>
+          <div class="bar-mini">
+            <div class="bar-mini-track"><div class="bar-mini-fill" style="width:${barW}%"></div></div>
+            <span class="margin-pct">${m.toFixed(0)}%</span>
+          </div>
+        </td>
+        <td><span class="pill ${pill}">${m>=50?'Alta':m>=35?'Media':'Baja'}</span></td>
+      </tr>`;
+  }).join('');
+}
+
+// ══════════════════════════════════════════════════════
+// INIT
+// ══════════════════════════════════════════════════════
+loadHoy();
+
+document.querySelectorAll('.tab').forEach(btn => {
+  btn.addEventListener('click', () => {
+    if (btn.dataset.view === 'semana')  loadSemana();
+    if (btn.dataset.view === 'catalogo') loadCatalogo();
+  });
+});
 </script>
 </body>
 </html>
