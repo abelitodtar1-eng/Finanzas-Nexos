@@ -1,0 +1,28 @@
+{{ JSON.stringify({ model: "claude-haiku-4-5-20251001", max_tokens: 1024, system: "Eres el asistente financiero de Pedro, negocio de sublimación en Cuba. Responde en español, conciso. Usa CUP para montos. Contexto: " + JSON.stringify($json.body.context), messages: [{ role: "user", content: $json.body.message }] }) }}en este dashboard no tenenemos los resultados hoy semana mes , ningun
+
+
+[11:43 a.m., 31/3/2026] Hijo De Yuri: current_date = timezone.now().strftime('%Y-%m-%d')
+url = f'https://tasas.eltoque.com/v1/trmi?date_to={current_date}%2000%3A00%3A01'
+[11:43 a.m., 31/3/2026] Hijo De Yuri: eso es python, el current_date lo que hace es que obtiene la fecha actual para que coja la tasa de cambio del dia
+[11:43 a.m., 31/3/2026] Hijo De Yuri: y la url es a la que se hace la peticion
+[11:44 a.m., 31/3/2026] Hijo De Yuri: headers = {
+            'accept': '/',
+            'Authorization': 'Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJmcmVzaCI6ZmFsc2UsImlhdCI6MTc2MjI3OTU2MSwianRpIjoiYTU5Yzk1NzYtZDQyMi00Y2ZiLWE0YzQtMjE0MGJjMTBiNjAyIiwidHlwZSI6ImFjY2VzcyIsInN1YiI6IjY5MDkwNWQ5ZTkyYmU3N2VhMzZhM2JlMiIsIm5iZiI6MTc2MjI3OTU2MSwiZXhwIjoxNzkzODE1NTYxfQ.ZS80dOnhco1P5haRQDyAqIBiOSRQsGsZop2O_SvgWXs'
+        }
+[11:44 a.m., 31/3/2026] Hijo De Yuri: ese headers es donde tienes que pasarle el token de autorizacion
+[11:44 a.m., 31/3/2026] Hijo De Yuri: print('Realizando petición a la API...')
+        session = requests.Session()
+        response = session.get(url, headers=headers, timeout=30, verify=False)
+
+        print(f'Status Code: {response.status_code}')
+        response.raise_for_status()
+
+        data = response.json()
+        print(f'Respuesta API: {data}')
+        print()
+
+        usd_rate = data['tasas']['USD']
+        print(f'TASA DE CAMBIO OBTENIDA: {usd_rate} CUP/USD')
+
+        
+
