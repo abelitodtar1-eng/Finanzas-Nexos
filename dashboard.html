@@ -488,7 +488,10 @@ let chartHoyBar = null, chartHoyDonut = null;
 
 async function loadHoy() {
   try {
-    const res  = await fetch(`${API}/api/hoy`);
+    const ctrl = new AbortController();
+    const timer = setTimeout(() => ctrl.abort(), 8000);
+    const res  = await fetch(`${API}/api/hoy`, { signal: ctrl.signal });
+    clearTimeout(timer);
     const data = await res.json();
     if (data.error) {
       // Hoja del día no existe → mostrar ceros en lugar de error
@@ -559,9 +562,10 @@ async function loadHoy() {
 
     showLoading('hoy', false);
   } catch (e) {
-    document.getElementById('hoy-loading').innerHTML = '⚠️ Error al cargar datos';
+    const msg = e.name === 'AbortError' ? '⏱️ Tiempo de espera agotado — Google Sheets sin respuesta' : '⚠️ Error al cargar datos';
+    document.getElementById('hoy-loading').innerHTML = `<span style="color:var(--muted)">${msg}</span>`;
     document.getElementById('badge-estado').className = 'badge demo';
-    document.getElementById('badge-estado').textContent = 'ERROR';
+    document.getElementById('badge-estado').textContent = 'OFFLINE';
   }
 }
 
