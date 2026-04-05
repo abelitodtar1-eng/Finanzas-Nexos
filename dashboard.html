@@ -142,6 +142,7 @@
       <div class="nav-item active" data-page="p-overview"><span class="nav-dot"></span> Resumen</div>
       <div class="nav-item" data-page="p-products"><span class="nav-dot"></span> Catálogo</div>
       <div class="nav-item" data-page="p-personal"><span class="nav-dot"></span> Personal</div>
+      <div class="nav-item" data-page="p-sheets"><span class="nav-dot"></span> Hoja de Cálculo</div>
     </nav>
     <div class="sidebar-footer">
       <div class="rate-line">USD · <span id="sb-usd">…</span> CUP</div>
@@ -201,6 +202,7 @@
         <button class="tab active" data-page="p-overview">Resumen</button>
         <button class="tab" data-page="p-products">Catálogo</button>
         <button class="tab" data-page="p-personal">Personal</button>
+        <button class="tab" data-page="p-sheets">Hoja</button>
       </div>
 
       <!-- ── OVERVIEW ── -->
@@ -272,6 +274,16 @@
         <div class="panel">
           <div class="panel-title">Evolución salarial</div>
           <div class="chart-wrap"><canvas id="c3"></canvas></div>
+        </div>
+      </div>
+
+      <div id="p-sheets" class="pag-hidden">
+        <div style="margin:-16px -20px;height:calc(100vh - 100px);">
+          <iframe
+            src="https://docs.google.com/spreadsheets/d/1g8lR3i_ex5scINzYoUA_hHM2ImaQ4Tg642MOTVvJ77Y/htmlview?rm=minimal"
+            style="width:100%;height:100%;border:none;display:block;"
+            allowfullscreen>
+          </iframe>
         </div>
       </div>
 
@@ -581,10 +593,10 @@ function renderSal(data, a) {
 }
 
 // ── Navigation ─────────────────────────────────────────────────────────────
-const PAGE_TITLES = { 'p-overview': 'Resumen financiero', 'p-products': 'Catálogo · Productos', 'p-personal': 'Personal · Salarios' };
+const PAGE_TITLES = { 'p-overview': 'Resumen financiero', 'p-products': 'Catálogo · Productos', 'p-personal': 'Personal · Salarios', 'p-sheets': 'Hoja de Cálculo' };
 
 function showPage(id) {
-  ['p-overview','p-products','p-personal'].forEach(p => {
+  ['p-overview','p-products','p-personal','p-sheets'].forEach(p => {
     document.getElementById(p).className = p === id ? '' : 'pag-hidden';
   });
   document.querySelectorAll('[data-page]').forEach(el => {
