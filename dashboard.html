@@ -9,11 +9,10 @@
   *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
   html, body { height: 100%; background: #080a0e; color: #e8eaf0; font-family: 'IBM Plex Sans', sans-serif; }
 
-  /* Layout */
   .app { display: flex; height: 100vh; overflow: hidden; }
   .sidebar { width: 210px; background: #080a0e; border-right: 1px solid #1e2430; display: flex; flex-direction: column; flex-shrink: 0; }
   .main { flex: 1; display: flex; flex-direction: column; overflow: hidden; background: #0d0f14; }
-  .topbar { background: #0d0f14; border-bottom: 1px solid #1e2430; padding: 12px 20px; display: flex; justify-content: space-between; align-items: center; flex-shrink: 0; }
+  .topbar { background: #0d0f14; border-bottom: 1px solid #1e2430; padding: 12px 20px; display: flex; justify-content: space-between; align-items: center; flex-shrink: 0; gap: 10px; }
   .content { flex: 1; overflow-y: auto; padding: 18px 20px; }
 
   /* Sidebar */
@@ -28,22 +27,26 @@
   .nav-dot { width: 5px; height: 5px; border-radius: 50%; background: currentColor; flex-shrink: 0; }
   .sidebar-footer { padding: 14px 16px; border-top: 1px solid #1e2430; }
   .rate-line { font-family: 'IBM Plex Mono', monospace; font-size: 10px; color: #3a4255; line-height: 1.9; }
-  .rate-line span { color: #2a3245; }
 
   /* Topbar */
-  .page-title { font-family: 'IBM Plex Mono', monospace; font-size: 11px; color: #3a4255; letter-spacing: 2px; text-transform: uppercase; }
+  .page-title { font-family: 'IBM Plex Mono', monospace; font-size: 11px; color: #3a4255; letter-spacing: 2px; text-transform: uppercase; white-space: nowrap; }
   .topbar-right { display: flex; gap: 8px; align-items: center; flex-wrap: wrap; }
-  .badge { background: rgba(0,212,170,0.08); color: #00d4aa; font-size: 10px; padding: 3px 10px; border-radius: 4px; border: 1px solid rgba(0,212,170,0.15); font-family: 'IBM Plex Mono', monospace; }
+  .badge { background: rgba(0,212,170,0.08); color: #00d4aa; font-size: 10px; padding: 3px 10px; border-radius: 4px; border: 1px solid rgba(0,212,170,0.15); font-family: 'IBM Plex Mono', monospace; white-space: nowrap; }
   .badge.gray { background: rgba(255,255,255,0.04); color: #4a5568; border-color: #1e2430; }
-  .badge.blue { background: rgba(24,95,165,0.12); color: #5b9fd6; border-color: rgba(24,95,165,0.2); }
+
+  /* Month nav */
+  .month-nav { display: flex; align-items: center; gap: 8px; }
+  .month-btn { background: rgba(255,255,255,0.04); border: 1px solid #1e2430; color: #4a5568; width: 24px; height: 24px; border-radius: 4px; cursor: pointer; font-size: 12px; display: flex; align-items: center; justify-content: center; transition: all 0.15s; }
+  .month-btn:hover { color: #8899aa; border-color: #2a3a50; }
+  .month-label { font-family: 'IBM Plex Mono', monospace; font-size: 10px; color: #8899aa; letter-spacing: 1px; min-width: 80px; text-align: center; }
 
   /* Period pills */
-  .period-bar { padding: 10px 0 14px; display: flex; gap: 6px; flex-wrap: wrap; }
+  .period-bar { padding: 4px 0 14px; display: flex; gap: 6px; flex-wrap: wrap; }
   .pill { padding: 4px 12px; border-radius: 4px; font-size: 10px; cursor: pointer; border: 1px solid #1e2430; background: transparent; color: #3a4255; font-family: 'IBM Plex Mono', monospace; letter-spacing: 0.5px; transition: all 0.15s; }
   .pill:hover { border-color: #2a3a50; color: #8899aa; }
   .pill.on { background: rgba(0,212,170,0.08); color: #00d4aa; border-color: rgba(0,212,170,0.2); }
 
-  /* KPI Cards */
+  /* KPI */
   .kpi-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 10px; margin-bottom: 14px; }
   .kpi-card { background: #111420; border: 1px solid #1e2430; border-radius: 8px; padding: 16px; }
   .kpi-label { font-family: 'IBM Plex Mono', monospace; font-size: 9px; color: #2a3245; letter-spacing: 2px; text-transform: uppercase; margin-bottom: 10px; }
@@ -52,39 +55,29 @@
   .kpi-value.red { color: #e05c5c; }
   .kpi-sub { font-size: 10px; color: #2a3245; margin-top: 6px; }
 
-  /* Tab bar */
-  .tab-bar { display: flex; gap: 2px; margin-bottom: 16px; }
-  .tab { padding: 6px 14px; font-size: 11px; color: #3a4255; border-radius: 4px; cursor: pointer; transition: all 0.15s; font-family: 'IBM Plex Sans', sans-serif; background: transparent; border: none; }
+  /* Tab bar (mobile) */
+  .tab-bar { display: none; gap: 2px; margin-bottom: 16px; }
+  .tab { padding: 6px 14px; font-size: 11px; color: #3a4255; border-radius: 4px; cursor: pointer; transition: all 0.15s; background: transparent; border: none; }
   .tab.active { background: rgba(0,212,170,0.08); color: #00d4aa; }
   .tab:hover:not(.active) { color: #8899aa; }
 
   /* Panels */
   .panel { background: #111420; border: 1px solid #1e2430; border-radius: 8px; padding: 16px; }
   .panel-title { font-family: 'IBM Plex Mono', monospace; font-size: 9px; color: #3a4255; letter-spacing: 2px; text-transform: uppercase; margin-bottom: 14px; }
-
   .panel-row { display: grid; grid-template-columns: 2fr 1fr; gap: 10px; margin-bottom: 14px; }
-  .bottom-row { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 10px; margin-bottom: 14px; }
 
   /* Chart */
   .chart-wrap { position: relative; height: 180px; }
   canvas { width: 100% !important; height: 100% !important; }
 
-  /* Bar chart (top products) */
+  /* Bar chart */
   .bar-row { display: flex; align-items: center; gap: 8px; margin-bottom: 10px; }
   .bar-label { font-family: 'IBM Plex Mono', monospace; font-size: 10px; color: #4a5568; width: 90px; flex-shrink: 0; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
   .bar-track { flex: 1; height: 5px; background: #1e2430; border-radius: 3px; overflow: hidden; }
   .bar-fill { height: 100%; border-radius: 3px; background: #00d4aa; transition: width 0.5s ease; }
   .bar-val { font-family: 'IBM Plex Mono', monospace; font-size: 10px; color: #8899aa; width: 44px; text-align: right; }
 
-  /* Mini stats */
-  .mini-stat { display: flex; justify-content: space-between; align-items: center; padding: 7px 0; border-bottom: 1px solid #181c28; }
-  .mini-stat:last-child { border-bottom: none; }
-  .mini-label { font-size: 11px; color: #3a4255; }
-  .mini-val { font-family: 'IBM Plex Mono', monospace; font-size: 11px; color: #8899aa; }
-  .mini-val.up { color: #00d4aa; }
-  .mini-val.down { color: #e05c5c; }
-
-  /* Period summary table */
+  /* Table */
   .data-table { width: 100%; border-collapse: collapse; }
   .data-table th { font-family: 'IBM Plex Mono', monospace; font-size: 9px; text-transform: uppercase; letter-spacing: 1.5px; color: #2a3245; text-align: left; padding: 0 0 10px; border-bottom: 1px solid #1e2430; font-weight: 400; }
   .data-table td { font-size: 12px; padding: 9px 0; border-bottom: 1px solid #151820; color: #8899aa; font-family: 'IBM Plex Mono', monospace; }
@@ -93,14 +86,12 @@
   .data-table td.num { text-align: right; }
   .data-table td.pos { color: #00d4aa; }
   .data-table td.neg { color: #e05c5c; }
-
-  /* Tag */
-  .tag { display: inline-block; font-size: 9px; padding: 2px 7px; border-radius: 3px; font-family: 'IBM Plex Mono', monospace; letter-spacing: 0.5px; }
+  .tag { display: inline-block; font-size: 9px; padding: 2px 7px; border-radius: 3px; font-family: 'IBM Plex Mono', monospace; }
   .tag-ok { background: rgba(0,212,170,0.1); color: #00d4aa; }
   .tag-no { background: rgba(224,92,92,0.1); color: #e05c5c; }
   .tag-zero { background: rgba(255,255,255,0.04); color: #3a4255; }
 
-  /* Products page */
+  /* Products */
   .pag-hidden { display: none; }
   .search-input { width: 100%; padding: 8px 14px; border: 1px solid #1e2430; border-radius: 6px; font-size: 12px; font-family: 'IBM Plex Mono', monospace; background: #0d0f14; color: #e8eaf0; margin-bottom: 14px; outline: none; transition: border-color .15s; }
   .search-input:focus { border-color: rgba(0,212,170,0.3); }
@@ -114,20 +105,26 @@
   .mini-bar { width: 40px; height: 4px; background: #1e2430; border-radius: 2px; display: inline-block; vertical-align: middle; margin-left: 6px; overflow: hidden; }
   .mini-fill { height: 100%; border-radius: 2px; }
 
-  /* Personal page */
+  /* Personal */
   .info-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-bottom: 10px; }
   .avatar-card { display: flex; flex-direction: column; align-items: center; text-align: center; gap: 10px; padding: 1.5rem; }
   .avatar { width: 40px; height: 40px; border-radius: 50%; display: inline-flex; align-items: center; justify-content: center; font-family: 'IBM Plex Mono', monospace; font-size: 12px; font-weight: 500; }
   .sal-row { display: flex; justify-content: space-between; align-items: center; padding: 9px 0; border-bottom: 1px solid #151820; flex-wrap: wrap; gap: 6px; }
   .sal-row:last-child { border-bottom: none; }
 
-  /* Responsive */
+  /* Loading */
+  .loading { display: flex; flex-direction: column; align-items: center; justify-content: center; height: 200px; gap: 12px; }
+  .spinner { width: 24px; height: 24px; border: 2px solid #1e2430; border-top-color: #00d4aa; border-radius: 50%; animation: spin 0.8s linear infinite; }
+  @keyframes spin { to { transform: rotate(360deg); } }
+  .loading-text { font-family: 'IBM Plex Mono', monospace; font-size: 10px; color: #2a3245; letter-spacing: 2px; }
+  .error-msg { font-family: 'IBM Plex Mono', monospace; font-size: 11px; color: #e05c5c; padding: 12px; background: rgba(224,92,92,0.08); border: 1px solid rgba(224,92,92,0.2); border-radius: 6px; margin-bottom: 14px; }
+
   @media (max-width: 900px) {
     .sidebar { display: none; }
     .kpi-grid { grid-template-columns: repeat(2, 1fr); }
     .panel-row { grid-template-columns: 1fr; }
-    .bottom-row { grid-template-columns: 1fr; }
     .info-grid { grid-template-columns: 1fr; }
+    .tab-bar { display: flex; }
   }
 </style>
 </head>
@@ -142,13 +139,13 @@
     </div>
     <nav class="nav">
       <div class="nav-section">Vistas</div>
-      <div class="nav-item active" onclick="showPage('p-overview',this)"><span class="nav-dot"></span> Resumen</div>
-      <div class="nav-item" onclick="showPage('p-products',this)"><span class="nav-dot"></span> Catálogo</div>
-      <div class="nav-item" onclick="showPage('p-personal',this)"><span class="nav-dot"></span> Personal</div>
+      <div class="nav-item active" data-page="p-overview"><span class="nav-dot"></span> Resumen</div>
+      <div class="nav-item" data-page="p-products"><span class="nav-dot"></span> Catálogo</div>
+      <div class="nav-item" data-page="p-personal"><span class="nav-dot"></span> Personal</div>
     </nav>
     <div class="sidebar-footer">
-      <div class="rate-line">USD <span>·</span> <span id="sb-usd">515</span> CUP</div>
-      <div class="rate-line">MLC <span>·</span> <span id="sb-mlc">400</span> CUP</div>
+      <div class="rate-line">USD · <span id="sb-usd">…</span> CUP</div>
+      <div class="rate-line">MLC · <span id="sb-mlc">…</span> CUP</div>
     </div>
   </div>
 
@@ -157,12 +154,20 @@
     <div class="topbar">
       <div class="page-title" id="top-title">Resumen financiero</div>
       <div class="topbar-right">
-        <div class="badge gray" id="top-periodo">Última hoja: —</div>
-        <div class="badge" id="top-meta">— períodos · — productos</div>
+        <div class="month-nav">
+          <button class="month-btn" onclick="changeMonth(-1)">‹</button>
+          <span class="month-label" id="top-mes">…</span>
+          <button class="month-btn" onclick="changeMonth(1)">›</button>
+        </div>
+        <div class="badge gray" id="top-periodo">…</div>
+        <div class="badge" id="top-meta">…</div>
       </div>
     </div>
 
     <div class="content">
+
+      <!-- Error banner -->
+      <div id="error-banner" class="error-msg" style="display:none"></div>
 
       <!-- Period pills -->
       <div class="period-bar" id="pills-container"></div>
@@ -172,7 +177,7 @@
         <div class="kpi-card">
           <div class="kpi-label">Venta total acumulada</div>
           <div class="kpi-value green" id="k-venta">—</div>
-          <div class="kpi-sub">CUP · todos los períodos</div>
+          <div class="kpi-sub">CUP · período seleccionado</div>
         </div>
         <div class="kpi-card">
           <div class="kpi-label">Inversión total</div>
@@ -180,47 +185,53 @@
           <div class="kpi-sub">CUP · costo mercancía</div>
         </div>
         <div class="kpi-card">
-          <div class="kpi-label">Ganancia neta total</div>
+          <div class="kpi-label">Ganancia neta</div>
           <div class="kpi-value" id="k-neta">—</div>
           <div class="kpi-sub">CUP · tras 20% s/ventas</div>
         </div>
         <div class="kpi-card">
           <div class="kpi-label">Margen promedio neto</div>
-          <div class="kpi-value green">33.6%</div>
+          <div class="kpi-value green" id="k-margen">—</div>
           <div class="kpi-sub">Catálogo completo</div>
         </div>
       </div>
 
-      <!-- TAB NAVIGATION (mobile) -->
+      <!-- Mobile tabs -->
       <div class="tab-bar" id="tab-bar-mobile">
-        <button class="tab active" onclick="showPage('p-overview',this)">Resumen</button>
-        <button class="tab" onclick="showPage('p-products',this)">Catálogo</button>
-        <button class="tab" onclick="showPage('p-personal',this)">Personal</button>
+        <button class="tab active" data-page="p-overview">Resumen</button>
+        <button class="tab" data-page="p-products">Catálogo</button>
+        <button class="tab" data-page="p-personal">Personal</button>
       </div>
 
       <!-- ── OVERVIEW ── -->
       <div id="p-overview">
-        <div class="panel-row">
-          <div class="panel">
-            <div class="panel-title">Ventas vs Inversión por período</div>
-            <div class="chart-wrap"><canvas id="c1"></canvas></div>
-          </div>
-          <div class="panel">
-            <div class="panel-title">Top 6 — margen neto %</div>
-            <div id="top-margen"></div>
-          </div>
+        <div id="overview-loading" class="loading">
+          <div class="spinner"></div>
+          <div class="loading-text">Cargando datos…</div>
         </div>
-        <div class="panel-row">
-          <div class="panel">
-            <div class="panel-title">Ganancia neta por período</div>
-            <div class="chart-wrap"><canvas id="c2"></canvas></div>
+        <div id="overview-content" style="display:none">
+          <div class="panel-row">
+            <div class="panel">
+              <div class="panel-title">Ventas vs Inversión por período</div>
+              <div class="chart-wrap"><canvas id="c1"></canvas></div>
+            </div>
+            <div class="panel">
+              <div class="panel-title">Top 6 — margen neto %</div>
+              <div id="top-margen"></div>
+            </div>
           </div>
-          <div class="panel">
-            <div class="panel-title">Resumen por período</div>
-            <table class="data-table">
-              <thead><tr><th>Fecha</th><th class="num">Venta</th><th class="num">Neta</th><th>Estado</th></tr></thead>
-              <tbody id="dtbody"></tbody>
-            </table>
+          <div class="panel-row">
+            <div class="panel">
+              <div class="panel-title">Ganancia neta por período</div>
+              <div class="chart-wrap"><canvas id="c2"></canvas></div>
+            </div>
+            <div class="panel">
+              <div class="panel-title">Resumen por período</div>
+              <table class="data-table">
+                <thead><tr><th>Fecha</th><th class="num">Venta</th><th class="num">Neta</th><th>Estado</th></tr></thead>
+                <tbody id="dtbody"></tbody>
+              </table>
+            </div>
           </div>
         </div>
       </div>
@@ -228,7 +239,7 @@
       <!-- ── PRODUCTS ── -->
       <div id="p-products" class="pag-hidden">
         <div class="panel">
-          <input class="search-input" type="text" placeholder="Buscar producto..." id="srch" oninput="filterProds()">
+          <input class="search-input" type="text" placeholder="Buscar producto…" id="srch" oninput="filterProds()">
           <div style="overflow-x:auto">
             <table class="prod-table">
               <thead><tr><th>#</th><th>Producto</th><th>P. Venta</th><th>G. Neta</th><th>Margen</th></tr></thead>
@@ -270,85 +281,149 @@
 
 <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.min.js"></script>
 <script>
-const DAILY=[
-  {f:'23-3-26',lb:'23 Mar',v:0,inv:0,g:-6409,n:-5127.2,sD:-640.9,sY:-640.9},
-  {f:'29-3-26',lb:'29 Mar',v:0,inv:0,g:-6409,n:-5127.2,sD:-640.9,sY:-640.9},
-  {f:'30-3-26',lb:'30 Mar',v:198400,inv:105373.4,g:86617.6,n:69294.08,sD:8661.76,sY:8661.76},
-  {f:'31-3-26',lb:'31 Mar',v:280000,inv:141237.5,g:132353.5,n:105882.8,sD:13235.35,sY:13235.35},
-  {f:'1-4-26',lb:'1 Abr',v:100000,inv:53087.5,g:40503.5,n:32402.8,sD:4050.35,sY:4050.35},
-  {f:'2-4-26',lb:'2 Abr',v:100000,inv:53087.5,g:40503.5,n:32402.8,sD:4050.35,sY:4050.35}
-];
-
-const PRODS=[
-  {n:'Pulóver Blanco Dri-Fit',p:2000,gn:750.6,m:37.5},
-  {n:'Pulóver blanco niño(1-10)',p:1800,gn:734.8,m:40.8},
-  {n:'Jarras de Cristal 16oz',p:3000,gn:877.4,m:29.2},
-  {n:'Losa 20x20 con soporte',p:1600,gn:558.8,m:34.9},
-  {n:'Losa 15x15 con soporte',p:1300,gn:439.4,m:33.8},
-  {n:'Losa 10x10 con soporte',p:1200,gn:739.7,m:61.6},
-  {n:'Jarra 11oz',p:1300,gn:354.67,m:27.3},
-  {n:'Gorra',p:2000,gn:725.48,m:36.3},
-  {n:'Jaba de Tela',p:1200,gn:515.2,m:42.9},
-  {n:'Llaveros de Acrílico c/ herraje',p:400,gn:173.88,m:43.5},
-  {n:'Mauspad',p:1000,gn:514,m:51.4},
-  {n:'Botellas de Aluminio',p:2500,gn:484.27,m:19.4},
-  {n:'Enguatadas',p:2200,gn:645.2,m:29.3},
-  {n:'Portacelular',p:1200,gn:477,m:39.8},
-  {n:'Pomos de Aluminio',p:2800,gn:511.4,m:18.3},
-  {n:'Tazas de Café',p:1500,gn:669.48,m:44.6},
-  {n:'Pomos Deportivos 750ml',p:3500,gn:658.8,m:18.8},
-  {n:'Jarra Mágica',p:1300,gn:532.67,m:41.0},
-  {n:'Jarras Térmicas',p:3200,gn:432.67,m:13.5},
-  {n:'Pulóver Blanco Poliespandex',p:2400,gn:722.8,m:30.1},
-  {n:'Delantal Negro c/ vinil textil',p:2000,gn:777.2,m:38.9},
-  {n:'Propio Vinil logo',p:500,gn:231.25,m:46.2},
-  {n:'Propio Vinil A4',p:900,gn:422.5,m:46.9},
-  {n:'Propio Sublimación',p:400,gn:232.8,m:58.2},
-  {n:'Monederos',p:700,gn:228,m:32.6},
-  {n:'Fotorrocas',p:2300,gn:478,m:20.8},
-  {n:'Cojines',p:2100,gn:595.2,m:28.3},
-  {n:'Pulóver Colores c/ Vinil Textil',p:2200,gn:669.4,m:30.4},
-  {n:'Pulóver Negro Poliespandex',p:2400,gn:871.6,m:36.3},
-  {n:'Pulóver Beige Poliespandex',p:2400,gn:1072.8,m:44.7},
-  {n:'Pop Sockets',p:1000,gn:349.48,m:34.9},
-  {n:'Imanes',p:1100,gn:404.23,m:36.7},
-  {n:'P. Color c/ vinil sublimable',p:2700,gn:607.76,m:22.5},
-  {n:'Delantal c/ Vinil Sublimable',p:2200,gn:532.76,m:24.2},
-  {n:'Propio Vinil Textil Sublimable',p:1500,gn:425.96,m:28.4},
-  {n:'Bolsos Grandes',p:3000,gn:674,m:22.5}
-];
-
-const fmt = n => Math.round(n).toLocaleString('es-ES');
+// ── State ──────────────────────────────────────────────────────────────────
+let DAILY = [];
+let PRODS = [];
+let SALARIOS = { Danay: 0, Dayan: 0 };
 let currentPeriod = 'all';
+let currentMes = null;   // "M-YY" format e.g. "4-26"
 let charts = {};
 
-// ── Build pills ──
+const fmt = n => Math.round(n).toLocaleString('es-ES');
+
+// ── Helpers ────────────────────────────────────────────────────────────────
+function fmtDate(fecha) {
+  // "2-4-26" → "2 Abr"
+  const meses = ['','Ene','Feb','Mar','Abr','May','Jun','Jul','Ago','Sep','Oct','Nov','Dic'];
+  const [d, m] = fecha.split('-').map(Number);
+  return `${d} ${meses[m] || m}`;
+}
+
+function prevMonth(mes) {
+  let [m, y] = mes.split('-').map(Number);
+  m--; if (m < 1) { m = 12; y--; }
+  return `${m}-${y}`;
+}
+function nextMonth(mes) {
+  let [m, y] = mes.split('-').map(Number);
+  m++; if (m > 12) { m = 1; y++; }
+  return `${m}-${y}`;
+}
+
+// ── Data loading ───────────────────────────────────────────────────────────
+async function loadCatalogo() {
+  const res = await fetch('/api/catalogo');
+  if (!res.ok) throw new Error(`/api/catalogo → ${res.status}`);
+  const data = await res.json();
+
+  PRODS = data.productos
+    .filter(p => p.precio_venta > 0)
+    .map(p => ({
+      n: p.nombre,
+      p: p.precio_venta,
+      gn: p.ganancia_neta,
+      m: p.precio_venta > 0 ? (p.ganancia_neta / p.precio_venta * 100) : 0,
+    }));
+
+  SALARIOS = data.salarios || { Danay: 0, Dayan: 0 };
+
+  const tasas = data.tasas || {};
+  document.getElementById('sb-usd').textContent = tasas.USD || '—';
+  document.getElementById('sb-mlc').textContent = tasas.MLC || '—';
+
+  // Catalog margin KPI
+  if (PRODS.length > 0) {
+    const avgMargen = PRODS.reduce((s, p) => s + p.m, 0) / PRODS.length;
+    document.getElementById('k-margen').textContent = avgMargen.toFixed(1) + '%';
+  }
+}
+
+async function loadMes(mes) {
+  const url = mes ? `/api/mes?mes=${mes}` : '/api/mes';
+  const res = await fetch(url);
+  if (!res.ok) throw new Error(`/api/mes → ${res.status}`);
+  const data = await res.json();
+
+  currentMes = data.mes;
+
+  // Flatten all days from all weeks
+  DAILY = [];
+  for (const semana of (data.semanas || [])) {
+    for (const dia of (semana.dias || [])) {
+      const v   = dia.totales.venta;
+      const inv = dia.totales.inversion;
+      const g   = dia.totales.ganancia;   // ganancia bruta = venta - inversion
+      const n   = g * 0.8;                // neta tras 20%
+      // Salario: 10% de ganancia bruta si positiva, si no → costo fijo negativo
+      const sBase = SALARIOS.Danay || 0;
+      const sD = g > 0 ? g * 0.1 : -sBase;
+      const sY = g > 0 ? g * 0.1 : -(SALARIOS.Dayan || 0);
+
+      DAILY.push({ f: dia.fecha, lb: fmtDate(dia.fecha), v, inv, g, n, sD, sY });
+    }
+  }
+
+  // Update topbar
+  document.getElementById('top-mes').textContent = (data.mes_label || '').toUpperCase();
+  if (DAILY.length > 0) {
+    document.getElementById('top-periodo').textContent = `Última hoja: ${DAILY[DAILY.length-1].f}`;
+    document.getElementById('top-meta').textContent = `${DAILY.filter(d=>d.v>0).length} días c/venta · ${PRODS.length} productos`;
+  }
+}
+
+async function init() {
+  showLoading(true);
+  showError('');
+  try {
+    await loadCatalogo();
+    await loadMes(null);
+    buildPills();
+    currentPeriod = 'all';
+    refresh();
+    filterProds();
+    showLoading(false);
+  } catch (e) {
+    showLoading(false);
+    showError('Error al cargar datos: ' + e.message);
+    console.error(e);
+  }
+}
+
+async function changeMonth(delta) {
+  if (!currentMes) return;
+  const mes = delta < 0 ? prevMonth(currentMes) : nextMonth(currentMes);
+  showLoading(true);
+  showError('');
+  try {
+    await loadMes(mes);
+    buildPills();
+    currentPeriod = 'all';
+    refresh();
+    showLoading(false);
+  } catch (e) {
+    showLoading(false);
+    showError('Error: ' + e.message);
+  }
+}
+
+function showLoading(on) {
+  document.getElementById('overview-loading').style.display = on ? 'flex' : 'none';
+  document.getElementById('overview-content').style.display = on ? 'none' : 'block';
+}
+
+function showError(msg) {
+  const el = document.getElementById('error-banner');
+  el.style.display = msg ? 'block' : 'none';
+  el.textContent = msg;
+}
+
+// ── Pills ──────────────────────────────────────────────────────────────────
 function buildPills() {
   const c = document.getElementById('pills-container');
-  const pills = [['all','Todos'],...DAILY.map(d=>[d.f,d.lb])];
-  c.innerHTML = pills.map(([f,lb]) =>
-    `<span class="pill${f==='all'?' on':''}" onclick="setPeriod('${f}',this)">${lb}</span>`
+  const items = [['all', 'Todos'], ...DAILY.map(d => [d.f, d.lb])];
+  c.innerHTML = items.map(([f, lb]) =>
+    `<span class="pill${f === 'all' ? ' on' : ''}" onclick="setPeriod('${f}',this)">${lb}</span>`
   ).join('');
-}
-
-// ── Header meta ──
-function updateMeta() {
-  const last = DAILY[DAILY.length-1];
-  document.getElementById('top-periodo').textContent = `Última hoja: ${last.f}`;
-  document.getElementById('top-meta').textContent = `${DAILY.filter(d=>d.v>0).length} períodos · ${PRODS.length} productos`;
-  document.getElementById('sb-usd').textContent = '515';
-  document.getElementById('sb-mlc').textContent = '400';
-}
-
-function getData() { return currentPeriod==='all' ? DAILY : DAILY.filter(d=>d.f===currentPeriod); }
-function agg(data) {
-  return {
-    v: data.reduce((s,d)=>s+d.v,0),
-    inv: data.reduce((s,d)=>s+d.inv,0),
-    n: data.reduce((s,d)=>s+d.n,0),
-    sD: data.reduce((s,d)=>s+d.sD,0),
-    sY: data.reduce((s,d)=>s+d.sY,0),
-  };
 }
 
 function setPeriod(p, el) {
@@ -358,13 +433,25 @@ function setPeriod(p, el) {
   refresh();
 }
 
+// ── Aggregation ────────────────────────────────────────────────────────────
+function getData() { return currentPeriod === 'all' ? DAILY : DAILY.filter(d => d.f === currentPeriod); }
+function agg(data) {
+  return {
+    v:   data.reduce((s, d) => s + d.v, 0),
+    inv: data.reduce((s, d) => s + d.inv, 0),
+    n:   data.reduce((s, d) => s + d.n, 0),
+    sD:  data.reduce((s, d) => s + d.sD, 0),
+    sY:  data.reduce((s, d) => s + d.sY, 0),
+  };
+}
+
+// ── Refresh ────────────────────────────────────────────────────────────────
 function refresh() {
   const data = getData();
   const a = agg(data);
 
-  // KPIs
   document.getElementById('k-venta').textContent = fmt(a.v);
-  document.getElementById('k-inv').textContent = fmt(a.inv);
+  document.getElementById('k-inv').textContent   = fmt(a.inv);
   const ne = document.getElementById('k-neta');
   ne.textContent = fmt(a.n);
   ne.className = 'kpi-value ' + (a.n >= 0 ? 'green' : 'red');
@@ -377,9 +464,9 @@ function refresh() {
 
 function renderTable(data) {
   document.getElementById('dtbody').innerHTML = data.map(d => {
-    const tag = d.v===0
+    const tag = d.v === 0
       ? '<span class="tag tag-zero">Sin venta</span>'
-      : d.n>=0
+      : d.n >= 0
         ? '<span class="tag tag-ok">Positivo</span>'
         : '<span class="tag tag-no">Pérdida</span>';
     return `<tr>
@@ -391,7 +478,7 @@ function renderTable(data) {
   }).join('');
 }
 
-// Chart.js dark theme options
+// ── Charts ─────────────────────────────────────────────────────────────────
 const COPTS = {
   responsive: true, maintainAspectRatio: false,
   plugins: {
@@ -421,7 +508,7 @@ function renderCharts(data) {
     type: 'line',
     data: { labels: labs, datasets: [{
       label: 'Ganancia neta',
-      data: data.map(d=>d.n),
+      data: data.map(d => d.n),
       borderColor: '#00d4aa',
       backgroundColor: 'rgba(0,212,170,0.06)',
       tension: 0.4, fill: true,
@@ -435,25 +522,26 @@ function renderCharts(data) {
 }
 
 function renderTop() {
-  const top = [...PRODS].sort((a,b) => b.m-a.m).slice(0,6);
-  const mx = Math.max(...top.map(p=>p.m));
+  const top = [...PRODS].sort((a,b) => b.m - a.m).slice(0, 6);
+  if (!top.length) { document.getElementById('top-margen').innerHTML = '<div style="color:#2a3245;font-size:11px;padding:8px 0">Sin datos</div>'; return; }
+  const mx = Math.max(...top.map(p => p.m));
   document.getElementById('top-margen').innerHTML = top.map(p => {
-    const col = p.m>=40 ? '#00d4aa' : p.m>=25 ? '#7ab8d6' : '#8899aa';
-    const w = Math.round(p.m/mx*100);
-    const lbl = p.n.length > 16 ? p.n.slice(0,14)+'…' : p.n;
+    const col = p.m >= 40 ? '#00d4aa' : p.m >= 25 ? '#7ab8d6' : '#8899aa';
+    const lbl = p.n.length > 16 ? p.n.slice(0, 14) + '…' : p.n;
     return `<div class="bar-row">
       <span class="bar-label" title="${p.n}">${lbl}</span>
-      <div class="bar-track"><div class="bar-fill" style="width:${w}%;background:${col}"></div></div>
+      <div class="bar-track"><div class="bar-fill" style="width:${Math.round(p.m/mx*100)}%;background:${col}"></div></div>
       <span class="bar-val" style="color:${col}">${p.m.toFixed(1)}%</span>
     </div>`;
   }).join('');
 }
 
+// ── Products ───────────────────────────────────────────────────────────────
 function filterProds() {
   const q = document.getElementById('srch').value.toLowerCase();
-  const list = [...PRODS].filter(p => p.n.toLowerCase().includes(q)).sort((a,b) => b.m-a.m);
-  document.getElementById('prod-body').innerHTML = list.map((p,i) => {
-    const col = p.m>=40 ? '#00d4aa' : p.m>=25 ? '#7ab8d6' : '#8899aa';
+  const list = [...PRODS].filter(p => p.n.toLowerCase().includes(q)).sort((a,b) => b.m - a.m);
+  document.getElementById('prod-body').innerHTML = list.map((p, i) => {
+    const col = p.m >= 40 ? '#00d4aa' : p.m >= 25 ? '#7ab8d6' : '#8899aa';
     return `<tr>
       <td style="color:#2a3245;font-size:10px">${i+1}</td>
       <td class="name">${p.n}</td>
@@ -464,59 +552,57 @@ function filterProds() {
   }).join('');
 }
 
+// ── Personal ───────────────────────────────────────────────────────────────
 function renderSal(data, a) {
   document.getElementById('s-danay').textContent = fmt(a.sD);
+  document.getElementById('s-danay').className = 'kpi-value ' + (a.sD >= 0 ? 'green' : 'red');
   document.getElementById('s-dayan').textContent = fmt(a.sY);
+  document.getElementById('s-dayan').className = 'kpi-value ' + (a.sY >= 0 ? 'green' : 'red');
+
   document.getElementById('sal-list').innerHTML = data.map(d => {
-    const tot = (d.sD||0) + (d.sY||0);
-    const p = d.n > 0 ? Math.round(tot/d.n*100) : 0;
+    const tot = (d.sD || 0) + (d.sY || 0);
+    const pct = d.n > 0 ? Math.round(tot / d.n * 100) : 0;
     return `<div class="sal-row">
       <span style="font-size:12px;color:#8899aa;font-family:'IBM Plex Mono',monospace">${d.lb}</span>
       <span style="font-size:11px;color:#3a4255;font-family:'IBM Plex Mono',monospace">Danay: ${fmt(d.sD)} · Dayan: ${fmt(d.sY)}</span>
-      <span style="font-size:10px;color:#2a3245;font-family:'IBM Plex Mono',monospace">${p}% s/neta</span>
+      <span style="font-size:10px;color:#2a3245;font-family:'IBM Plex Mono',monospace">${pct > 0 ? pct + '% s/neta' : '—'}</span>
     </div>`;
   }).join('');
 
   if (charts.c3) charts.c3.destroy();
   charts.c3 = new Chart(document.getElementById('c3'), {
     type: 'bar',
-    data: { labels: data.map(d=>d.lb), datasets: [
-      { label: 'Danay', data: data.map(d=>d.sD||0), backgroundColor: 'rgba(139,132,212,0.6)', borderColor: '#8b84d4', borderWidth: 1, borderRadius: 4 },
-      { label: 'Dayan', data: data.map(d=>d.sY||0), backgroundColor: 'rgba(212,122,90,0.6)', borderColor: '#d47a5a', borderWidth: 1, borderRadius: 4 }
+    data: { labels: data.map(d => d.lb), datasets: [
+      { label: 'Danay', data: data.map(d => d.sD || 0), backgroundColor: 'rgba(139,132,212,0.6)', borderColor: '#8b84d4', borderWidth: 1, borderRadius: 4 },
+      { label: 'Dayan', data: data.map(d => d.sY || 0), backgroundColor: 'rgba(212,122,90,0.6)', borderColor: '#d47a5a', borderWidth: 1, borderRadius: 4 }
     ]},
     options: COPTS
   });
 }
 
-let currentPage = 'p-overview';
+// ── Navigation ─────────────────────────────────────────────────────────────
+const PAGE_TITLES = { 'p-overview': 'Resumen financiero', 'p-products': 'Catálogo · Productos', 'p-personal': 'Personal · Salarios' };
 
-function showPage(id, triggerEl) {
+function showPage(id) {
   ['p-overview','p-products','p-personal'].forEach(p => {
-    document.getElementById(p).className = p===id ? '' : 'pag-hidden';
+    document.getElementById(p).className = p === id ? '' : 'pag-hidden';
   });
-  // Sync sidebar nav
-  document.querySelectorAll('.nav-item').forEach(el => {
-    el.classList.toggle('active', el.getAttribute('onclick') && el.getAttribute('onclick').includes(id));
+  document.querySelectorAll('[data-page]').forEach(el => {
+    el.classList.toggle('active', el.dataset.page === id);
   });
-  // Sync tab bar (mobile)
-  document.querySelectorAll('#tab-bar-mobile .tab').forEach(el => {
-    el.classList.toggle('active', el.getAttribute('onclick') && el.getAttribute('onclick').includes(id));
-  });
+  document.getElementById('top-title').textContent = PAGE_TITLES[id] || '';
 
-  currentPage = id;
   if (id === 'p-products') filterProds();
   if (id === 'p-personal') renderSal(getData(), agg(getData()));
-
-  // Update topbar title
-  const titles = { 'p-overview': 'Resumen financiero', 'p-products': 'Catálogo · Productos', 'p-personal': 'Personal · Salarios' };
-  document.getElementById('top-title').textContent = titles[id] || '';
 }
 
-// ── Init ──
-buildPills();
-updateMeta();
-refresh();
-filterProds();
+// Wire up nav items and tabs
+document.querySelectorAll('[data-page]').forEach(el => {
+  el.addEventListener('click', () => showPage(el.dataset.page));
+});
+
+// ── Boot ───────────────────────────────────────────────────────────────────
+init();
 </script>
 </body>
 </html>
