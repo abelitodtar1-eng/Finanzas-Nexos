@@ -650,12 +650,6 @@ async function loadSemana() {
     const { semana, totales, semana_label } = dataSem;
     const { salarios } = await resCat.json();
 
-    // Marcar día actual
-    const diasIds = ['dia-lunes','dia-martes','dia-miercoles','dia-jueves','dia-viernes','dia-sabado'];
-    const hoyIdx = new Date().getDay(); // 0=dom,1=lun...6=sab
-    const idxMap = {1:0,2:1,3:2,4:3,5:4,6:5};
-    diasIds.forEach(id => document.getElementById(id).classList.remove('hoy'));
-    if (idxMap[hoyIdx] !== undefined) document.getElementById(diasIds[idxMap[hoyIdx]]).classList.add('hoy');
     document.getElementById('kpi-sem-art').textContent  = totales.articulos;
     document.getElementById('kpi-sem-venta').textContent = fmt(totales.venta);
     document.getElementById('kpi-sem-gan').textContent   = fmt(totales.ganancia);
@@ -936,6 +930,15 @@ document.getElementById('btn-next-mes').addEventListener('click', () => {
 // ══════════════════════════════════════════════════════
 // INIT
 // ══════════════════════════════════════════════════════
+
+// Marcar día actual en pills de semana
+const _diasIds = ['dia-lunes','dia-martes','dia-miercoles','dia-jueves','dia-viernes','dia-sabado'];
+const _idxMap  = {1:0, 2:1, 3:2, 4:3, 5:4, 6:5};
+const _hoyIdx  = new Date().getDay();
+if (_idxMap[_hoyIdx] !== undefined) {
+  document.getElementById(_diasIds[_idxMap[_hoyIdx]]).classList.add('hoy');
+}
+
 loadHoy();
 
 document.querySelectorAll('.tab').forEach(btn => {
